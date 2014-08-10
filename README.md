@@ -7,13 +7,14 @@ Simple demo to show how one can automatically identify camera resolutions for us
 Quick scan checks only common video resolutions.
 Full scan checks all 4:3 and 16:9 resolutions between a range.
 
-UPDATED AUGUST 2014
--------------------
+### Updated August 2014
 
 What's new:
 * Select the camera you use (browser must support device enumeration)
 * Updates to quick scan to allow checking of common resolutions
 * Specify upper and lower limits for full scan
-* Output results to JSON 
-
-Brought to you by [webrtcHacks.com]: http://webrtchacks.com
+* Output results to JSON
+ 
+Available at [https://webrtchacks.github.io/WebRTC-Camera-Resolution/]
+ 
+Brought to you by [webrtcHacks.com](http://webrtchacks.com)

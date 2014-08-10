@@ -31,32 +31,39 @@ function listVideoDevices(deviceList ){
         return;
     }
 
-    MediaStreamTrack.getSources(function (device_options){
-        if (device_options){
+    MediaStreamTrack.getSources(function (deviceOptions){
+        if (deviceOptions){
             deviceList.hidden = false;
             var camNum = 1; //count the number of cameras for id if device label is unavailable
-            for (var x=0; x<device_options.length; x++){
-                if (device_options[x].kind == 'video') {
-                    videoDevices.push(device_options[x]);
-                    var option = document.createElement("option");
-                    if (device_options[x].label) {
-                        option.text = device_options[x].label;
+            for (var x=0; x<deviceOptions.length; x++){
+                if (deviceOptions[x].kind == 'video') {
+
+                    //define our own Options so we can modify it if needed
+                    //needed for http & when label attribute is empty & we have to assign one
+                    var camOption = {
+                        label: deviceOptions[x].label,
+                        id: deviceOptions[x].id
+                    };
+
+                    var listOption = document.createElement("option");
+
+                    if (deviceOptions[x].label) {
+                        listOption.text = deviceOptions[x].label;
                     }
                     else {
-                        option.text = "Camera " + camNum;
+                        //Add a label if none exists (happens before first user capture approval)
+                        camOption.label = listOption.text = "Camera " + camNum;
                         camNum++;
                     }
-                    deviceList.add(option);
-                    console.log("Camera found: " + JSON.stringify(device_options[x]));
+                    deviceList.add(listOption);                 //update the pull down list
+                    videoDevices.push(camOption);          //only add video devices
+                    console.log("Camera found: " + JSON.stringify(deviceOptions[x]));
                 }
             }
-
         }
-        else
-        {
+        else {
             console.log("No device sources found");
         }
-
     });
 
     return videoDevices;
@@ -74,16 +81,25 @@ $(document).ready(function(){
     }
     $('#quickLabel').text(quickText);
 
+    //check if the user is using http vs. https
+    //consider forcing redirect from client
+    if (document.location.protocol=="http:"){
+        alert("This will not work well with http. Rerun with https");
+    }
+
 });
 
-$('button').click(function(){
-
+$('#devices').click(function(){
     //assign the camera based on what is selected in the dropdown select
     for(z=0; z<devices.length; z++) {
         if (devices[z].label == $('#devices')[0].value) {
             selectedCamera = devices[z];
+            console.log(selectedCamera.label + "[" + selectedCamera.id  + "] selected");
         }
     }
+});
+
+$('button').click(function(){
 
     //console.log("current device is " + devices.label + " id:" + devices[d].id);
 
