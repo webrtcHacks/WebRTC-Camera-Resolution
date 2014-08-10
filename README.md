@@ -16,4 +16,4 @@ What's new:
 * Specify upper and lower limits for full scan
 * Output results to JSON 
 
-Brought to you by [webrtcHacks.com]: http://webrtchacks.com
+Brought to you by [webrtcHacks.com](http://webrtchacks.com)
