@@ -5,25 +5,85 @@
         <meta charset="utf-8" />
         <title>webrtcHacks Camera Resolution Finder</title>
 
+        <!reuse the webrtcHacks style sheet!>
         <link rel="stylesheet" type="text/css" href="css/style.css">
-
-        <style type="text/css">
-            video {border-width: thin; border-color: gray; border-style: dotted; background-color: rgba(128, 128, 128, 0.25); visibility: hidden}
-        </style>
     </head>
+    <style type="text/css">
+        button{
+            width: 100%;
+        }
+        button#jsonOut{
+            width: auto;
+        }
+        div{
+            text-align: top;
+
+        }
+        p{
+           line-height: 1.5em;
+           margin: 5px;
+        }
+        div#quickArea{
+            vertical-align: top;
+            float: left;
+            width: 200px;
+            border: solid lightgray 1px;
+            min-height: 100px;
+            margin-right: 10px;
+            padding: 5px;
+        }
+        div#fullArea{
+            vertical-align: top;
+            float: left;
+            width: 200px;
+            border: solid lightgray 1px;
+            min-height: 100px;
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+        video {
+            border-width: thin;
+            border-color: gray;
+            border-style: dotted;
+            background-color: lightgray;
+            transform: scale(-1, 1); /*For Firefox (& IE) */
+            -webkit-transform: scale(-1, 1); /*for Chrome & Opera (& Safari) */
+            clear: both;
+            display: block;
+        }
+
+    </style>
     <body>
         <div id="container">
+
             <h1>getUserMedia camera resolution finder</h1>
-            <p>Click the start below to find camera resolutions.</p>
-            <button id="startButton" onclick="start()">Start</button>
-            <p></p>
-           <video id="camera" autoplay></video>
-            <table id="results" border="1" style="visibility: hidden">
-                <tr><th>Ask</th><th>Actual</th><th>Same?</th></td></tr>
+            <p>Select camera below:</p>
+            <select id="devices" name="Video devices"></select>
+            <p>Then click one of the buttons below to find camera resolutions.</p>
+            <div id="controlArea">
+                <div id="quickArea">
+                <button id="quickButton">Quick Scan</button>
+                <p id="quickLabel"></p>
+                </div>
+
+                <div id="fullArea">
+                <button id="fullButton">Full Scan</button>
+                    <p>vertical resolution range: </p>
+                    <p>max:
+                        <input type="text" id="hiRes" VALUE="720" size="2" maxlength="4" max="2160" pattern="[0-9]{1,4}" />
+                         to min:
+                        <input type="text" id="loRes" VALUE="240" size="2" maxlength="4" max="2160" pattern="[0-9]{1,4}"/>
+                    </p>
+                </div>
+            </div>
+            <video id="camera" autoplay></video>
+            <table id="results" border="1" hidden >
+                <tr><th>Device</th><th>Res Name</th><th>Ask</th><th>Actual</th><th>Status</th><th hidden>DeviceIndex</th><th hidden>ResIndex</th></tr>
             </table>
-        <p>Use the <a href="fullscan.html">full scan</a> version to check every 4:3 and 16:9 resolution.</p>
-        <p>Visit <a href="http://webrtchacks.com">webrtcHacks.com</a> for more details.</p> 
+            <button id="jsonOut" hidden>Dump JSON results</button>
+            <p>Visit <a href="http://webrtchacks.com">webrtcHacks.com</a> for more details.</p>
         </div>
-            <script src="js/quickscan.js"></script>
+        <script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+        <script src="js/resolutionScan.js"></script>
     </body>
 </html>

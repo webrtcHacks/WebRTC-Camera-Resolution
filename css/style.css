@@ -1249,7 +1249,7 @@ div.alignright {
 }
 /* Search form */
 #s {
-	background: #fff url( images/search.gif ) 100% -3px no-repeat;
+	/*background: #fff url( images/search.gif ) 100% -3px no-repeat;*/
 	border-width: 0;
 	color: #666c7f;
 	font-size: 14px;
