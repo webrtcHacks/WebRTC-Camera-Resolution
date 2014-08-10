@@ -26,50 +26,55 @@ Inspiration 2: https://raw.githubusercontent.com/muaz-khan/WebRTC-Experiment/mas
 function listVideoDevices(deviceList ){
 
     var videoDevices = [];
-    if(!MediaStreamTrack){
+    if(!MediaStreamTrack.getSources){
         console.log("No media stream track enumeration");
+        $('#camSelect').hide();
         return;
     }
+    else {
+        MediaStreamTrack.getSources(function (device_options) {
+            if (device_options) {
+                deviceList.hidden = false;
+                var camNum = 1; //count the number of cameras for id if
+                // device label is unavailable
+                for (var x = 0; x < deviceOptions.length; x++) {
+                    if (deviceOptions[x].kind == 'video') {
 
-    MediaStreamTrack.getSources(function (device_options){
-        if (device_options){
-            deviceList.hidden = false;
-            var camNum = 1; //count the number of cameras for id if
-            // device label is unavailable
-            for (var x=0; x<deviceOptions.length; x++){
-                if (deviceOptions[x].kind == 'video') {
+                        //define our own Options so we can modify it if needed
+                        //needed for http & when label attribute is empty & we have to assign one
+                        var camOption = {
+                            label: deviceOptions[x].label,
+                            id: deviceOptions[x].id
+                        };
 
-                    //define our own Options so we can modify it if needed
-                    //needed for http & when label attribute is empty & we have to assign one
-                    var camOption = {
-                        label: deviceOptions[x].label,
-                        id: deviceOptions[x].id
-                    };
+                        var listOption = document.createElement("option");
 
-                    var listOption = document.createElement("option");
-
-                    if (deviceOptions[x].label) {
-                        listOption.text = deviceOptions[x].label;
+                        if (deviceOptions[x].label) {
+                            listOption.text = deviceOptions[x].label;
+                        }
+                        else {
+                            option.text = "Camera " + camNum;
+                            camNum++;
+                        }
+                        deviceList.add(option);
+                        console.log("Camera found: " + JSON.stringify(device_options[x]));
                     }
-                    else {
-                        option.text = "Camera " + camNum;
-                        camNum++;
-                    }
-                    deviceList.add(option);
-                    console.log("Camera found: " + JSON.stringify(device_options[x]));
                 }
             }
-        }
-        else{
-            console.log("No device sources found");
-        }
-    });
-
-    return videoDevices;
+            else {
+                console.log("No device sources found");
+            }
+        });
+        return videoDevices;
+    }
 }
 
 //find & list camera devices on load
 $(document).ready(function(){
+
+    //check to see if https is being used
+
+
     devices = listVideoDevices( $('#devices')[0] );
 
     //Show text of what res's are used on QuickScan
