@@ -34,6 +34,7 @@ function listVideoDevices(deviceList ){
     MediaStreamTrack.getSources(function (device_options){
         if (device_options){
             deviceList.hidden = false;
+<<<<<<< Updated upstream
             var camNum = 1; //count the number of cameras for id if device label is unavailable
             for (var x=0; x<device_options.length; x++){
                 if (device_options[x].kind == 'video') {
@@ -41,6 +42,24 @@ function listVideoDevices(deviceList ){
                     var option = document.createElement("option");
                     if (device_options[x].label) {
                         option.text = device_options[x].label;
+=======
+            var camNum = 1; //count the number of cameras for id if
+            // device label is unavailable
+            for (var x=0; x<deviceOptions.length; x++){
+                if (deviceOptions[x].kind == 'video') {
+
+                    //define our own Options so we can modify it if needed
+                    //needed for http & when label attribute is empty & we have to assign one
+                    var camOption = {
+                        label: deviceOptions[x].label,
+                        id: deviceOptions[x].id
+                    };
+
+                    var listOption = document.createElement("option");
+
+                    if (deviceOptions[x].label) {
+                        listOption.text = deviceOptions[x].label;
+>>>>>>> Stashed changes
                     }
                     else {
                         option.text = "Camera " + camNum;
