@@ -72,10 +72,10 @@ function listVideoDevices(){
 
 //find & list camera devices on load
 $(document).ready(function(){
-    //Normalize for implementation differences
-    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
-    if (!navigator.getUserMedia){
+    console.log("adapter.js says this is " + webrtcDetectedBrowser + " " + webrtcDetectedVersion);
+
+    if (!getUserMedia){
         alert('You need a browser that supports WebRTC');
         $("div").hide();
         return;
@@ -122,26 +122,33 @@ $('button').click(function(){
     $('button').prop("disabled",true);
     $('table').show();
 
-    //run through the deviceList to see what is selected
-     for (var deviceCount=0, d=0; d<deviceList.length; d++){
-        if(deviceList[d].selected){
-            //if it is selected, check the label against the getSources array to select the proper ID
-            for(z=0; z<devices.length; z++) {
-                if (devices[z].label == deviceList[d].value) {
-                    selectedCamera[deviceCount] = devices[z];
-                    console.log(selectedCamera[deviceCount].label + "[" + selectedCamera[deviceCount].id  + "] selected");
-                    deviceCount++;
+    //if there is device enumeration
+    if (devices){
+        //run through the deviceList to see what is selected
+         for (var deviceCount=0, d=0; d<deviceList.length; d++){
+            if(deviceList[d].selected){
+                //if it is selected, check the label against the getSources array to select the proper ID
+                for(z=0; z<devices.length; z++) {
+                    if (devices[z].label == deviceList[d].value) {
+                        selectedCamera[deviceCount] = devices[z];
+                        console.log(selectedCamera[deviceCount].label + "[" + selectedCamera[deviceCount].id  + "] selected");
+                        deviceCount++;
+                    }
                 }
             }
         }
-    }
 
-    //Make sure there is at least 1 camera selected before starting
-    if (selectedCamera[0]) {
-        gum(tests[r], selectedCamera[camNum].id);
+        //Make sure there is at least 1 camera selected before starting
+        if (selectedCamera[0]) {
+            gum(tests[r], selectedCamera[camNum].id);
+        }
+        else{
+            alert("You must select a camera first");
+        }
     }
     else{
-        alert("You must select a camera first");
+        selectedCamera[0] = {label: "Unknown"};
+        gum(tests[r]);
     }
 
 });
@@ -150,7 +157,7 @@ $('button').click(function(){
 function gum(candidate, camId) {
     //Kill the stream if it is already running
 
-    if (!navigator.getUserMedia) {
+    if (!getUserMedia) {
         console.log("No getUserMedia support");
         return;
     }
@@ -164,21 +171,22 @@ function gum(candidate, camId) {
     }
 
     //create constraints object
-    var constraints = {
-        audio: false,
-        video: {
-            mandatory: {
-                sourceId: camId,
-                minWidth: candidate.width,
-                minHeight: candidate.height,
-                maxWidth: candidate.width,
-                maxHeight: candidate.height
 
+    var constraints = {
+            audio: false,
+            video: {
+                mandatory: {
+                    sourceId: camId,
+                    minWidth: candidate.width,
+                    minHeight: candidate.height,
+                    maxWidth: candidate.width,
+                    maxHeight: candidate.height
+
+                }
             }
         }
-    };
 
-    navigator.getUserMedia(constraints, onStream, onFail);  //getUserMedia call
+    getUserMedia(constraints, onStream, onFail);  //getUserMedia call
 
     function onStream(stream) {
 
