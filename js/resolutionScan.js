@@ -6,12 +6,13 @@
 var camVideo = $('#camera')[0],     //where we will put & test our video output
     deviceList = $('#devices')[0],  //device list dropdown
     devices,                        //getSources object to hold various camera options
-    selectedCamera  ={id:null},     //used to hold a camera's ID and other parameters
+    selectedCamera  =[],            //used to hold a camera's ID and other parameters
     tests,                          //holder for our test results
     currentTest,                    //the current resolution being tested
     camId,                          //the camera we want to test
     r = 0,                          //used for iterating through the array
-    d = 0,
+    camNum = 0,                       //used for iterating through number of camera
+    //deviceCount = 0,                //counter for number of devices
     scanning = false;               //variable to show if we are in the middle of a scan
 
 /*
@@ -57,7 +58,7 @@ function listVideoDevices(){
                     videoDevices.push(camOption);               //only add video devices
                     console.log("Camera found: " + JSON.stringify(deviceOptions[x]));
 
-                    selectedCamera = devices[0];    //set the default camera in case there is no user selection
+                    //selectedCamera = devices[0];    //set the default camera in case there is no user selection
                 }
             }
         }
@@ -98,10 +99,9 @@ $(document).ready(function(){
 
 });
 
+/*
 //Assign the camera based on what is selected in the dropdown select
 $('#devices').click(function(){
-
-
 
     for(z=0; z<devices.length; z++) {
         if (devices[z].label == deviceList.value) {
@@ -110,14 +110,17 @@ $('#devices').click(function(){
         }
     }
 });
+*/
 
 //Start scan by controlling the quick and full scan buttons
 $('button').click(function(){
 
+    //setup for a quick scan using the hand-built quickScan object
     if (this.innerHTML == "Quick Scan"){
         console.log("Quick scan");
         tests = quickScan;
     }
+    //setup for a full scan and build scan object based on inputs
     else if (this.innerHTML == "Full Scan"){
         var highRes = $('#hiRes').val();
         var lowRes = $('#loRes').val();
@@ -133,7 +136,27 @@ $('button').click(function(){
     $('button').prop("disabled",true);
     $('table').show();
 
-    gum(tests[r], selectedCamera.id );
+    //run through the deviceList to see what is selected
+     for (var deviceCount=0, d=0; d<deviceList.length; d++){
+        if(deviceList[d].selected){
+            //if it is selected, check the label against the getSources array to select the proper ID
+            for(z=0; z<devices.length; z++) {
+                if (devices[z].label == deviceList[d].value) {
+                    selectedCamera[deviceCount] = devices[z];
+                    console.log(selectedCamera[deviceCount].label + "[" + selectedCamera[deviceCount].id  + "] selected");
+                    deviceCount++;
+                }
+            }
+        }
+    }
+
+    //Make sure there is at least 1 camera selected before starting
+    if (selectedCamera[0]) {
+        gum(tests[r], selectedCamera[camNum].id);
+    }
+    else{
+        alert("You must select a camera first");
+    }
 
 });
 
@@ -146,55 +169,55 @@ function gum(candidate, camId) {
         return;
     }
 
-        console.log("trying " + candidate.label);
+    console.log("trying " + candidate.label);
 
-        //Kill any running streams;
-        if (!!window.stream){
-            camVideo.src = null;
-            window.stream.stop();
-        }
-
-        //create constraints object
-        var constraints = {
-            audio: false,
-            video: {/*
-                optional: [
-                    { sourceId: camId }
-                ],    //set the proper device*/
-                mandatory: {
-                    sourceId: camId,
-                    minWidth: candidate.width,
-                    minHeight: candidate.height,
-                    maxWidth: candidate.width,
-                    maxHeight: candidate.height
-
-                }
-            }
-        };
-
-        navigator.getUserMedia(constraints, onStream, onFail);  //getUserMedia call
-
-        function onStream(stream) {
-
-            //change the video dimensions
-            console.log("Display size for " + candidate.label + ": " + candidate.width + "x" + candidate.height);
-            camVideo.width = candidate.width;
-            camVideo.height = candidate.height;
-
-            window.stream = stream; // stream available to console
-            camVideo.src = window.URL.createObjectURL(stream);
-            camVideo.play();
-
-        }
-
-        function onFail(error) {
-            console.log('Video error!', error);
-
-            if (scanning) {
-                //console.log("Stream dimensions for " + candidates[r].label + ": " + camVideo.videoWidth + "x" + camVideo.videoHeight);
-                captureResults("fail: " + error.name);
-            }
+    //Kill any running streams;
+    if (!!window.stream){
+        camVideo.src = null;
+        window.stream.stop();
     }
+
+    //create constraints object
+    var constraints = {
+        audio: false,
+        video: {/*
+            optional: [
+                { sourceId: camId }
+            ],    //set the proper device*/
+            mandatory: {
+                sourceId: camId,
+                minWidth: candidate.width,
+                minHeight: candidate.height,
+                maxWidth: candidate.width,
+                maxHeight: candidate.height
+
+            }
+        }
+    };
+
+    navigator.getUserMedia(constraints, onStream, onFail);  //getUserMedia call
+
+    function onStream(stream) {
+
+        //change the video dimensions
+        console.log("Display size for " + candidate.label + ": " + candidate.width + "x" + candidate.height);
+        camVideo.width = candidate.width;
+        camVideo.height = candidate.height;
+
+        window.stream = stream; // stream available to console
+        camVideo.src = window.URL.createObjectURL(stream);
+        camVideo.play();
+
+    }
+
+    function onFail(error) {
+        console.log('Video error!', error);
+
+        if (scanning) {
+            //console.log("Stream dimensions for " + candidates[r].label + ": " + camVideo.videoWidth + "x" + camVideo.videoHeight);
+            captureResults("fail: " + error.name);
+        }
+}
 }
 
 //TO DO: set to iterate only after play
@@ -245,18 +268,26 @@ function captureResults(status){
     deviceIndex.style.visibility="hidden";
     resIndex.style.visibility="hidden";
 
-    deviceName.innerHTML = selectedCamera.label;
+    deviceName.innerHTML = selectedCamera[camNum].label;
     label.innerHTML = tests[r].label;
     ask.innerHTML = tests[r].width + "x" + tests[r].height;
     actual.innerHTML = tests[r].streamWidth+ "x" + tests[r].streamHeight;
     statusCell.innerHTML = tests[r].status;
-    deviceIndex.innerHTML = d;
-    resIndex.innerHTML = r;
+    deviceIndex.innerHTML = camNum;     //used for debugging
+    resIndex.innerHTML = r;             //used for debugging
 
     r++;
+    //go to the next tests
     if (r < tests.length){
-        gum(tests[r], selectedCamera.id);
+        gum(tests[r], selectedCamera[camNum].id);
     }
+    //move on to the next camera
+    else if (camNum < selectedCamera.length){
+        camNum++;
+        r=0;
+        gum(tests[r], selectedCamera[camNum].id)
+    }
+    //finish up
     else{
            $('#camera').off("play"); //turn off the event handler
            $('button').off("click"); //turn the generic button handler this off
