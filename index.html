@@ -12,7 +12,7 @@
         button{
             width: 100%;
         }
-        button#jsonOut{
+        button#jsonOut, #csvOut{
             width: auto;
         }
         p{
@@ -76,9 +76,9 @@
             </div>
             <video id="camera" autoplay></video>
             <table id="results" border="1" hidden >
-                <tr><th>Device</th><th>Res Name</th><th>Ratio</th><th>Ask</th><th>Actual</th><th>Status</th><th hidden>DeviceIndex</th><th hidden>ResIndex</th></tr>
+                <tr><th>Browser</th><th>Device</th><th>Res Name</th><th>Ratio</th><th>Ask</th><th>Actual</th><th>Status</th><th hidden>DeviceIndex</th><th hidden>ResIndex</th></tr>
             </table>
-            <button id="jsonOut" hidden>Dump JSON results</button>
+            <button id="jsonOut" hidden>Dump JSON results</button><button id="csvOut" hidden>CSV export</button>
             <p>Visit <a href="http://webrtchacks.com">webrtcHacks.com</a> for more details.</p>
         </div>
         <script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>

@@ -8,11 +8,8 @@ var camVideo = $('#camera')[0],     //where we will put & test our video output
     devices,                        //getSources object to hold various camera options
     selectedCamera = [],//  ={id:null},            //used to hold a camera's ID and other parameters
     tests,                          //holder for our test results
-    currentTest,                    //the current resolution being tested
-    //camId,                          //the camera we want to test
     r = 0,                          //used for iterating through the array
     camNum = 0,                       //used for iterating through number of camera
-    //deviceCount = 0,                //counter for number of devices
     scanning = false;               //variable to show if we are in the middle of a scan
 
 /*
@@ -171,7 +168,6 @@ function gum(candidate, camId) {
     }
 
     //create constraints object
-
     var constraints = {
             audio: false,
             video: {
@@ -184,7 +180,7 @@ function gum(candidate, camId) {
 
                 }
             }
-        }
+        };
 
     getUserMedia(constraints, onStream, onFail);  //getUserMedia call
 
@@ -243,19 +239,21 @@ function captureResults(status){
 
 
     var row = $('table#results')[0].insertRow(-1);
-    var deviceName = row.insertCell(0);
-    var label = row.insertCell(1);
-    var ratio = row.insertCell(2);
-    var ask = row.insertCell(3);
-    var actual = row.insertCell(4);
-    var statusCell = row.insertCell(5);
-    var deviceIndex = row.insertCell(6);
-    var resIndex = row.insertCell(7);
+    var browserVer = row.insertCell(0);
+    var deviceName = row.insertCell(1);
+    var label = row.insertCell(2);
+    var ratio = row.insertCell(3);
+    var ask = row.insertCell(4);
+    var actual = row.insertCell(5);
+    var statusCell = row.insertCell(6);
+    var deviceIndex = row.insertCell(7);
+    var resIndex = row.insertCell(8);
 
     //don't show these
     deviceIndex.style.visibility="hidden";
     resIndex.style.visibility="hidden";
 
+    browserVer.innerHTML = webrtcDetectedBrowser + " " + webrtcDetectedVersion;
     deviceName.innerHTML = selectedCamera[camNum].label;
     label.innerHTML = tests[r].label;
     ratio.innerHTML = tests[r].ratio;
@@ -286,18 +284,26 @@ function captureResults(status){
             window.open(url, '_blank');
             window.focus();
         });
-        clickRows();
+
+        $('#csvOut').show().prop("disabled", false).click(function(){
+            exportTableToCSV.apply(this, [$('#results'), 'gumResTestExport.csv']);
+            });
+
+        //allow to click on a row to test (only works with device Enumeration
+        if (devices){
+            clickRows();
+        }
     }
 }
 
 //allow clicking on a row to see the camera capture
 function clickRows(){
     $('tr').click(function(){
-        r = $(this).find("td").eq(7).html();
+        r = $(this).find("td").eq(8).html();
 
         //lookup the device id based on the row label
         for(z=0; z<devices.length; z++) {
-            if(devices[z].label== $(this).find("td").eq(0).html()){
+            if(devices[z].label== $(this).find("td").eq(1).html()){
                 var thisCamId = devices[z].id;
             }
         }
@@ -390,3 +396,44 @@ function createAllResolutions(minHeight, maxHeight){
     console.log("resolutions length: " + resolutions.length);
     return resolutions;
 }
+
+//source: http://jsfiddle.net/terryyounghk/KPEGU/
+function exportTableToCSV($table, filename) {
+
+    console.log("export table");
+    var $rows = $table.find('tr:has(td),tr:has(th)'),
+
+    // Temporary delimiter characters unlikely to be typed by keyboard
+    // This is to avoid accidentally splitting the actual contents
+        tmpColDelim = String.fromCharCode(11), // vertical tab character
+        tmpRowDelim = String.fromCharCode(0), // null character
+
+    // actual delimiter characters for CSV format
+        colDelim = '","',
+        rowDelim = '"\r\n"',
+
+    // Grab text from table into CSV formatted string
+        csv = '"' + $rows.map(function (i, row) {
+            var $row = $(row),
+                $cols = $row.find('td,th');
+
+            return $cols.map(function (j, col) {
+                var $col = $(col),
+                    text = $col.text();
+
+                return text.replace('"', '""'); // escape double quotes
+
+            }).get().join(tmpColDelim);
+
+        }).get().join(tmpRowDelim)
+            .split(tmpRowDelim).join(rowDelim)
+            .split(tmpColDelim).join(colDelim) + '"',
+
+    // Data URI
+        csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+
+    window.open(csvData, '_blank');
+    //window.focus();
+
+}
+
