@@ -6,10 +6,10 @@
 var camVideo = $('#camera')[0],     //where we will put & test our video output
     deviceList = $('#devices')[0],  //device list dropdown
     devices,                        //getSources object to hold various camera options
-    selectedCamera  =[],            //used to hold a camera's ID and other parameters
+    selectedCamera = [],//  ={id:null},            //used to hold a camera's ID and other parameters
     tests,                          //holder for our test results
     currentTest,                    //the current resolution being tested
-    camId,                          //the camera we want to test
+    //camId,                          //the camera we want to test
     r = 0,                          //used for iterating through the array
     camNum = 0,                       //used for iterating through number of camera
     //deviceCount = 0,                //counter for number of devices
@@ -91,26 +91,12 @@ $(document).ready(function(){
 
     //Show text of what res's are used on QuickScan
     var quickText = "Sizes:";
-    //var l; //index var
     for(var l in quickScan){
         quickText +=  " " + quickScan[l].label
     }
     $('#quickLabel').text(quickText);
 
 });
-
-/*
-//Assign the camera based on what is selected in the dropdown select
-$('#devices').click(function(){
-
-    for(z=0; z<devices.length; z++) {
-        if (devices[z].label == deviceList.value) {
-            selectedCamera = devices[z];
-            console.log(selectedCamera.label + "[" + selectedCamera.id  + "] selected");
-        }
-    }
-});
-*/
 
 //Start scan by controlling the quick and full scan buttons
 $('button').click(function(){
@@ -180,10 +166,7 @@ function gum(candidate, camId) {
     //create constraints object
     var constraints = {
         audio: false,
-        video: {/*
-            optional: [
-                { sourceId: camId }
-            ],    //set the proper device*/
+        video: {
             mandatory: {
                 sourceId: camId,
                 minWidth: candidate.width,
@@ -220,29 +203,24 @@ function gum(candidate, camId) {
 }
 }
 
-//TO DO: set to iterate only after play
-//Add event listener
-//Might need to change scan function
 
 //Attach to play event
-//camVideo.addEventListener("playing", function(){captureResults("pass") });
 $('#camera').on("play", function(){
-
-    var timer = 10;
 
     //delay timer needed for jQuery binding
     var waitForDimensions = window.setInterval(function () {
         //see if the video dimensions are available
         if (camVideo.videoWidth * camVideo.videoHeight > 0) {
             clearInterval(waitForDimensions);
-            captureResults("pass");
+            if(tests[r].width + "x" + tests[r].height != camVideo.videoWidth + "x" + camVideo.videoHeight){
+                captureResults("fail: mismatch");
+                }
+            else{
+                captureResults("pass");
+            }
         }
-        //If not, wait another 10ms
-        else {
-            //console.log("No video dimensions after " + timer + " ms");
-            timer += 10;
-        }
-    }, 10);
+        //If not, wait another 50ms
+    }, 100);
 });
 
 //resultsTable = $('table#results')[0];
@@ -255,14 +233,16 @@ function captureResults(status){
     tests[r].streamWidth =  camVideo.videoWidth;
     tests[r].streamHeight =  camVideo.videoHeight;
 
+
     var row = $('table#results')[0].insertRow(-1);
     var deviceName = row.insertCell(0);
     var label = row.insertCell(1);
-    var ask = row.insertCell(2);
-    var actual = row.insertCell(3);
-    var statusCell = row.insertCell(4);
-    var deviceIndex = row.insertCell(5);
-    var resIndex = row.insertCell(6);
+    var ratio = row.insertCell(2);
+    var ask = row.insertCell(3);
+    var actual = row.insertCell(4);
+    var statusCell = row.insertCell(5);
+    var deviceIndex = row.insertCell(6);
+    var resIndex = row.insertCell(7);
 
     //don't show these
     deviceIndex.style.visibility="hidden";
@@ -270,6 +250,7 @@ function captureResults(status){
 
     deviceName.innerHTML = selectedCamera[camNum].label;
     label.innerHTML = tests[r].label;
+    ratio.innerHTML = tests[r].ratio;
     ask.innerHTML = tests[r].width + "x" + tests[r].height;
     actual.innerHTML = tests[r].streamWidth+ "x" + tests[r].streamHeight;
     statusCell.innerHTML = tests[r].status;
@@ -281,35 +262,40 @@ function captureResults(status){
     if (r < tests.length){
         gum(tests[r], selectedCamera[camNum].id);
     }
-    //move on to the next camera
-    else if (camNum < selectedCamera.length){
+    else if (camNum < selectedCamera.length -1){     //move on to the next camera
         camNum++;
         r=0;
         gum(tests[r], selectedCamera[camNum].id)
     }
-    //finish up
-    else{
-           $('#camera').off("play"); //turn off the event handler
-           $('button').off("click"); //turn the generic button handler this off
+    else{ //finish up
+       $('#camera').off("play"); //turn off the event handler
+       $('button').off("click"); //turn the generic button handler this off
 
-            scanning = false;
-            //dump JSON results to a new window when this button is pressed
-            $('#jsonOut').show().prop("disabled", false).click(function(){
-                var url = 'data:text/json;charset=utf8,' + encodeURIComponent(JSON.stringify(tests));
-                window.open(url, '_blank');
-                window.focus();
-            });
-            clickRows();
+        scanning = false;
+        //dump JSON results to a new window when this button is pressed
+        $('#jsonOut').show().prop("disabled", false).click(function(){
+            var url = 'data:text/json;charset=utf8,' + encodeURIComponent(JSON.stringify(tests));
+            window.open(url, '_blank');
+            window.focus();
+        });
+        clickRows();
     }
 }
 
 //allow clicking on a row to see the camera capture
 function clickRows(){
     $('tr').click(function(){
-        //d = $(this).find("td").eq(5).html();
-        r = $(this).find("td").eq(6).html();
+        r = $(this).find("td").eq(7).html();
+
+        //lookup the device id based on the row label
+        for(z=0; z<devices.length; z++) {
+            if(devices[z].label== $(this).find("td").eq(0).html()){
+                var thisCamId = devices[z].id;
+            }
+        }
+
         console.log("table click! clicked on " + tests[r].label );
-        gum(tests[r], selectedCamera.id);
+        gum(tests[r], thisCamId);
     })
 }
 
