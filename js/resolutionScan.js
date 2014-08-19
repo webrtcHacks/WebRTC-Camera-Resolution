@@ -2,38 +2,35 @@
  * Created by chad on 7/19/2014.
  */
 
-//Normalize for implementation differences
-navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia | navigator.msGetUserMedia;
-
 //Global variables
-var camVideo = $('#camera')[0], //where we will put & test our video output
-    selectedCamera,
-    tests,                    //holder for our test results
-    currentTest,                //the current resolution being tested
-    camId,                      //the camera we want to test
-    r = 0,                      //used for iterating through the array
+var camVideo = $('#camera')[0],     //where we will put & test our video output
+    deviceList = $('#devices')[0],  //device list dropdown
+    devices,                        //getSources object to hold various camera options
+    selectedCamera  ={id:null},     //used to hold a camera's ID and other parameters
+    tests,                          //holder for our test results
+    currentTest,                    //the current resolution being tested
+    camId,                          //the camera we want to test
+    r = 0,                          //used for iterating through the array
     d = 0,
-    scanning = false;           //variable to show if we are in the middle of a scan
-
-
+    scanning = false;               //variable to show if we are in the middle of a scan
 
 /*
 Get and list camera devices using MediaStreamTrack.getSources
 Inspiration 1: https://code.google.com/p/webrtc/source/browse/stable/samples/js/demos/html/device-switch.html
 Inspiration 2: https://raw.githubusercontent.com/muaz-khan/WebRTC-Experiment/master/demos/MediaStreamTrack.getSources.html
 */
-//remove deviceList if I am not going to have a dropdown
-function listVideoDevices(deviceList ){
+function listVideoDevices(){
 
     var videoDevices = [];
-    if(!MediaStreamTrack){
+    if(!MediaStreamTrack.getSources) //note for the future: getSources changing to getMediaDevices
+    {
         console.log("No media stream track enumeration");
         return;
     }
 
     MediaStreamTrack.getSources(function (deviceOptions){
         if (deviceOptions){
-            deviceList.hidden = false;
+            $('#selectArea').show();
             var camNum = 1; //count the number of cameras for id if device label is unavailable
             for (var x=0; x<deviceOptions.length; x++){
                 if (deviceOptions[x].kind == 'video') {
@@ -47,6 +44,7 @@ function listVideoDevices(deviceList ){
 
                     var listOption = document.createElement("option");
 
+                    //label should already exists if previous approval on HTTPS site
                     if (deviceOptions[x].label) {
                         listOption.text = deviceOptions[x].label;
                     }
@@ -56,8 +54,10 @@ function listVideoDevices(deviceList ){
                         camNum++;
                     }
                     deviceList.add(listOption);                 //update the pull down list
-                    videoDevices.push(camOption);          //only add video devices
+                    videoDevices.push(camOption);               //only add video devices
                     console.log("Camera found: " + JSON.stringify(deviceOptions[x]));
+
+                    selectedCamera = devices[0];    //set the default camera in case there is no user selection
                 }
             }
         }
@@ -71,53 +71,69 @@ function listVideoDevices(deviceList ){
 
 //find & list camera devices on load
 $(document).ready(function(){
-    devices = listVideoDevices( $('#devices')[0] );
+    //Normalize for implementation differences
+    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+    if (!navigator.getUserMedia){
+        alert('You need a browser that supports WebRTC');
+        $("div").hide();
+        return;
+    }
+
+    //check if the user is using http vs. https & redirect to https if needed
+    if (document.location.protocol != "https:"){
+        alert("This doesn't work well on http. Redirecting to https");
+        document.location.href = "https:" + document.location.href.substring(document.location.protocol.length);
+    }
+
+    devices = listVideoDevices();
 
     //Show text of what res's are used on QuickScan
     var quickText = "Sizes:";
-    var l; //index var
-    for(l in quickScan){
+    //var l; //index var
+    for(var l in quickScan){
         quickText +=  " " + quickScan[l].label
     }
     $('#quickLabel').text(quickText);
 
-    //check if the user is using http vs. https
-    //consider forcing redirect from client
-    if (document.location.protocol=="http:"){
-        alert("This will not work well with http. Rerun with https");
-    }
-
 });
 
+//Assign the camera based on what is selected in the dropdown select
 $('#devices').click(function(){
-    //assign the camera based on what is selected in the dropdown select
+
+
+
     for(z=0; z<devices.length; z++) {
-        if (devices[z].label == $('#devices')[0].value) {
+        if (devices[z].label == deviceList.value) {
             selectedCamera = devices[z];
             console.log(selectedCamera.label + "[" + selectedCamera.id  + "] selected");
         }
     }
 });
 
+//Start scan by controlling the quick and full scan buttons
 $('button').click(function(){
-
-    //console.log("current device is " + devices.label + " id:" + devices[d].id);
 
     if (this.innerHTML == "Quick Scan"){
         console.log("Quick scan");
         tests = quickScan;
     }
-    else{
+    else if (this.innerHTML == "Full Scan"){
         var highRes = $('#hiRes').val();
         var lowRes = $('#loRes').val();
         console.log("Full scan from " + lowRes + " to " + highRes);
         tests = createAllResolutions(lowRes, highRes );
     }
+    else
+    {
+        return
+    }
 
     scanning = true;
     $('button').prop("disabled",true);
     $('table').show();
-    gum(tests[r], selectedCamera.id);
+
+    gum(tests[r], selectedCamera.id );
 
 });
 
@@ -138,15 +154,15 @@ function gum(candidate, camId) {
             window.stream.stop();
         }
 
-        //create constraints
+        //create constraints object
         var constraints = {
             audio: false,
-            video: {
+            video: {/*
                 optional: [
                     { sourceId: camId }
-                ],    //set the proper device
+                ],    //set the proper device*/
                 mandatory: {
-                    //sourceId: camId,
+                    sourceId: camId,
                     minWidth: candidate.width,
                     minHeight: candidate.height,
                     maxWidth: candidate.width,
@@ -156,7 +172,7 @@ function gum(candidate, camId) {
             }
         };
 
-        navigator.getUserMedia(constraints, onStream, onFail);
+        navigator.getUserMedia(constraints, onStream, onFail);  //getUserMedia call
 
         function onStream(stream) {
 
@@ -229,7 +245,7 @@ function captureResults(status){
     deviceIndex.style.visibility="hidden";
     resIndex.style.visibility="hidden";
 
-    deviceName.innerHTML = devices[d].label;
+    deviceName.innerHTML = selectedCamera.label;
     label.innerHTML = tests[r].label;
     ask.innerHTML = tests[r].width + "x" + tests[r].height;
     actual.innerHTML = tests[r].streamWidth+ "x" + tests[r].streamHeight;
@@ -242,24 +258,17 @@ function captureResults(status){
         gum(tests[r], selectedCamera.id);
     }
     else{
-    /*    //Move on to the next camera
-        d++;
-        if (d<devices.length){
-            r=0;
-            gum(candidates[r], devices[d]);
-        }
-        else{}*/
            $('#camera').off("play"); //turn off the event handler
            $('button').off("click"); //turn the generic button handler this off
 
             scanning = false;
+            //dump JSON results to a new window when this button is pressed
             $('#jsonOut').show().prop("disabled", false).click(function(){
                 var url = 'data:text/json;charset=utf8,' + encodeURIComponent(JSON.stringify(tests));
                 window.open(url, '_blank');
                 window.focus();
             });
             clickRows();
-
     }
 }
 
@@ -280,43 +289,49 @@ const quickScan = [
         "label": "4K",
         "width" : 3840,
         "height": 2160,
-        "ratio": "HD"
+        "ratio": "16:9"
     },
     {
         "label": "1080p",
         "width": 1920,
         "height": 1080,
-        "ratio": "HD"
+        "ratio": "16:9"
     },
     {
         "label": "720p",
         "width": 1280,
         "height": 720,
-        "ratio": "HD"
+        "ratio": "16:9"
     },
     {
         "label": "SVGA",
         "width": 800,
         "height": 600,
-        "ratio": "SD"
+        "ratio": "4:3"
     },
     {
         "label": "VGA",
         "width": 640,
         "height": 480,
-        "ratio": "SD"
+        "ratio": "4:3"
     },
     {
         "label": "CIF",
         "width": 352,
         "height": 288,
-        "ratio": "SD"
+        "ratio": "4:3"
     },
     {
         "label": "QVGA",
         "width": 320,
         "height": 240,
-        "ratio": "SD"
+        "ratio": "4:3"
+    },
+    {
+        "label": "QQVGA",
+        "width": 160,
+        "height": 120,
+        "ratio": "4:3"
     }
 
 ];
@@ -335,7 +350,7 @@ function createAllResolutions(minHeight, maxHeight){
             "height": y,
             "width": (y * ratioHD).toFixed(),
             "label": (y * ratioHD).toFixed() + "x" + y,
-            "ratio": "HD"
+            "ratio": "16:9"
         };
         resolutions.push(res);
         //SD
@@ -343,7 +358,7 @@ function createAllResolutions(minHeight, maxHeight){
             "height": y,
             "width" : (y * ratioSD).toFixed(),
             "label": (y * ratioSD).toFixed() + "x" + y,
-            "ratio": "SD"
+            "ratio": "4:3"
         };
         resolutions.push(res);
     }

@@ -15,10 +15,6 @@
         button#jsonOut{
             width: auto;
         }
-        div{
-            text-align: top;
-
-        }
         p{
            line-height: 1.5em;
            margin: 5px;
@@ -41,7 +37,7 @@
             margin-bottom: 10px;
             padding: 5px;
         }
-        video {
+        video{
             border-width: thin;
             border-color: gray;
             border-style: dotted;
@@ -57,9 +53,11 @@
         <div id="container">
 
             <h1>getUserMedia camera resolution finder</h1>
-            <p>Select camera below:</p>
-            <select id="devices" name="Video devices"></select>
-            <p>Then click one of the buttons below to find camera resolutions.</p>
+            <div id="selectArea" hidden>
+                <p>Select camera below:</p>
+                <select id="devices" name="Video devices" multiple></select>
+            </div>
+            <p>Click one of the buttons below to find camera resolutions.</p>
             <div id="controlArea">
                 <div id="quickArea">
                 <button id="quickButton">Quick Scan</button>
