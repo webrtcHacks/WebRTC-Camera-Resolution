@@ -1,4 +1,5 @@
 /**
+ * Main js file for WebRTC-Camera-Resolution finder
  * Created by chad on 7/19/2014.
  */
 
@@ -6,10 +7,10 @@
 var camVideo = $('#camera')[0],     //where we will put & test our video output
     deviceList = $('#devices')[0],  //device list dropdown
     devices,                        //getSources object to hold various camera options
-    selectedCamera = [],//  ={id:null},            //used to hold a camera's ID and other parameters
+    selectedCamera = [],            //used to hold a camera's ID and other parameters
     tests,                          //holder for our test results
     r = 0,                          //used for iterating through the array
-    camNum = 0,                       //used for iterating through number of camera
+    camNum = 0,                     //used for iterating through number of camera
     scanning = false;               //variable to show if we are in the middle of a scan
 
 /*
@@ -108,12 +109,9 @@ $('button').click(function(){
         var highRes = $('#hiRes').val();
         var lowRes = $('#loRes').val();
         console.log("Full scan from " + lowRes + " to " + highRes);
-        tests = createAllResolutions(lowRes, highRes );
+        tests = createAllResolutions(parseInt(lowRes), parseInt(highRes) );
     }
-    else
-    {
-        return
-    }
+    else { return }
 
     scanning = true;
     $('button').prop("disabled",true);
@@ -143,6 +141,7 @@ $('button').click(function(){
             alert("You must select a camera first");
         }
     }
+    //if no device enumeration don't pass a Camera ID
     else{
         selectedCamera[0] = {label: "Unknown"};
         gum(tests[r]);
@@ -221,8 +220,6 @@ $('#camera').on("play", function(){
     }, 100);
 });
 
-//resultsTable = $('table#results')[0];
-
 //Save results to the candidate so
 function captureResults(status){
     console.log("Stream dimensions for " + tests[r].label + ": " + camVideo.videoWidth + "x" + camVideo.videoHeight);
@@ -230,7 +227,6 @@ function captureResults(status){
     tests[r].status = status;
     tests[r].streamWidth =  camVideo.videoWidth;
     tests[r].streamHeight =  camVideo.videoHeight;
-
 
     var row = $('table#results')[0].insertRow(-1);
     var browserVer = row.insertCell(0);
@@ -390,9 +386,11 @@ function createAllResolutions(minHeight, maxHeight){
     console.log("resolutions length: " + resolutions.length);
     return resolutions;
 }
-
-//source: http://jsfiddle.net/terryyounghk/KPEGU/
-function exportTableToCSV($table, filename) {
+/*
+Export results table to a CSV file in new window for download
+source: http://jsfiddle.net/terryyounghk/KPEGU/
+*/
+function exportTableToCSV($table) {
 
     console.log("export table");
     var $rows = $table.find('tr:has(td),tr:has(th)'),
