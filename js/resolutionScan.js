@@ -152,12 +152,6 @@ $('button').click(function(){
 
 //calls getUserMedia for a given camera and constraints
 function gum(candidate, camId) {
-    //Kill the stream if it is already running
-
-    if (!getUserMedia) {
-        console.log("No getUserMedia support");
-        return;
-    }
 
     console.log("trying " + candidate.label);
 
