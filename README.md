@@ -10,11 +10,17 @@ Full scan checks all 4:3 and 16:9 resolutions between a range.
 ### Updated August 2014
 
 What's new:
-* Select the camera you use (browser must support device enumeration)
-* Updates to quick scan to allow checking of common resolutions
-* Specify upper and lower limits for full scan
-* Output results to JSON
+* Using jQuery
+* Redirect to https
+* Device enumeration and selection if your browser supports it
+* Optional predefined set of common resolutions for a "quick" scan
+* More complete scanning of every 16:9 and 4:3 resolution within a user-defined range
+* Used the official adapter.js from here to normalize browser differences & help with identification
+* Clicking on a row after the test is done reloads that resolution
+* Dump results to JSON or CSV
  
-Available at [https://webrtchacks.github.io/WebRTC-Camera-Resolution/]
+Try it at https://webrtchacks.github.io/WebRTC-Camera-Resolution/
+
+Read more at http://webrtchacks.com/update-camera-constraints
  
 Brought to you by [webrtcHacks.com](http://webrtchacks.com)
