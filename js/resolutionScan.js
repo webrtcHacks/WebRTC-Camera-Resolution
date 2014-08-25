@@ -319,6 +319,12 @@ const quickScan = [
         "ratio": "16:9"
     },
     {
+        "label": "UXGA",
+        "width": 1600,
+        "height": 1200,
+        "ratio": "4:3"
+    },
+    {
         "label": "720p",
         "width": 1280,
         "height": 720,
@@ -346,6 +352,12 @@ const quickScan = [
         "label": "QVGA",
         "width": 320,
         "height": 240,
+        "ratio": "4:3"
+    },
+    {
+        "label": "QCIF",
+        "width": 176,
+        "height": 144,
         "ratio": "4:3"
     },
     {
