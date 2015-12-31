@@ -7,6 +7,7 @@
 var camVideo = $('#camera')[0],     //where we will put & test our video output
     deviceList = $('#devices')[0],  //device list dropdown
     devices,                        //getSources object to hold various camera options
+    localStream,
     selectedCamera = [],            //used to hold a camera's ID and other parameters
     tests,                          //holder for our test results
     r = 0,                          //used for iterating through the array
@@ -155,41 +156,59 @@ function gum(candidate, camId) {
     console.log("trying " + candidate.label);
 
     //Kill any running streams;
-    if (!!window.stream){
-        camVideo.src = null;
-        window.stream.stop();
+    if (localStream) {
+        localStream.getTracks().forEach(function (track) {
+            track.stop();
+        });
+        var videoTracks = localStream.getVideoTracks();
+        for (var i = 0; i !== videoTracks.length; ++i) {
+            videoTracks[i].stop();
+        }
     }
 
     //create constraints object
     var constraints = {
-            audio: false,
-            video: {
-                mandatory: {
-                    sourceId: camId,
-                    minWidth: candidate.width,
-                    minHeight: candidate.height,
-                    maxWidth: candidate.width,
-                    maxHeight: candidate.height
+        audio: false,
+        video: {
+            mandatory: {
+                sourceId: camId,
+                minWidth: candidate.width,
+                minHeight: candidate.height,
+                maxWidth: candidate.width,
+                maxHeight: candidate.height
 
-                }
             }
-        };
+        }
+    };
 
-    getUserMedia(constraints, onStream, onFail);  //getUserMedia call
+    navigator.mediaDevices.getUserMedia(constraints)
+        .then(gotStream)
+        .catch(function (error) {
+            console.log('getUserMedia error!', error);
 
-    function onStream(stream) {
+            if (scanning) {
+                //console.log("Stream dimensions for " + candidates[r].label + ": " + camVideo.videoWidth + "x" + camVideo.videoHeight);
+                captureResults("fail: " + error.name);
+            }
+        });
+
+
+    //getUserMedia(constraints, onStream, onFail);  //getUserMedia call
+
+    function gotStream(stream) {
 
         //change the video dimensions
         console.log("Display size for " + candidate.label + ": " + candidate.width + "x" + candidate.height);
         camVideo.width = candidate.width;
         camVideo.height = candidate.height;
 
-        window.stream = stream; // stream available to console
+        localstream = stream; // stream available to console
         camVideo.src = window.URL.createObjectURL(stream);
         camVideo.play();
 
     }
-
+}
+/*
     function onFail(error) {
         console.log('Video error!', error);
 
@@ -198,7 +217,7 @@ function gum(candidate, camId) {
             captureResults("fail: " + error.name);
         }
 }
-}
+}*/
 
 
 //Attach to play event
