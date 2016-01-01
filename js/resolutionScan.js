@@ -1,25 +1,23 @@
 /**
  * Main js file for WebRTC-Camera-Resolution finder
  * Created by chad on 7/19/2014.
+ * Modified January 1, 2016
  */
 
 //Global variables
-var camVideo = $('#camera')[0],     //where we will put & test our video output
-    deviceList = $('#devices')[0],  //device list dropdown
+var video = $('#video')[0],     //where we will put & test our video output
+//var video = document.querySelector('video'), //where we will put & test our video output
+    deviceList = $('#devices')[0],          //device list dropdown
     devices = [],                        //getSources object to hold various camera options
-    localStream,
+    stream,
     selectedCamera = [],            //used to hold a camera's ID and other parameters
     tests,                          //holder for our test results
     r = 0,                          //used for iterating through the array
     camNum = 0,                     //used for iterating through number of camera
     scanning = false;               //variable to show if we are in the middle of a scan
 
-
-
-
 function gotDevices(deviceInfos) {
     $('#selectArea').show();
-    console.log(deviceInfos);
     var camcount = 1;   //used for labeling if the device label is not enumerated
     for (var i = 0; i !== deviceInfos.length; ++i) {
         var deviceInfo = deviceInfos[i];
@@ -58,8 +56,6 @@ $(document).ready(function(){
         alert("This doesn't work well on http. Redirecting to https");
         document.location.href = "https:" + document.location.href.substring(document.location.protocol.length);
     }
-
-    //devices = listVideoDevices();
 
     //Show text of what res's are used on QuickScan
     var quickText = "Sizes:";
@@ -121,7 +117,6 @@ $('button').click(function(){
             console.log("No camera selected. Defaulting to " + deviceList[0].text);
             //$('button').prop("disabled",false);
 
-
             selectedCamera[0] = {id: deviceList[0].value, label: deviceList[0].text};
             gum(tests[r], selectedCamera[0]);
 
@@ -140,14 +135,10 @@ function gum(candidate, device) {
     console.log("trying " + candidate.label + " on " + device.label);
 
     //Kill any running streams;
-    if (localStream) {
-        localStream.getTracks().forEach(function (track) {
+    if (stream) {
+        stream.getTracks().forEach(function (track) {
             track.stop();
         });
-        var videoTracks = localStream.getVideoTracks();
-        for (var i = 0; i !== videoTracks.length; ++i) {
-            videoTracks[i].stop();
-        }
     }
 
     //create constraints object
@@ -165,58 +156,64 @@ function gum(candidate, device) {
         }
     };
 
-    navigator.mediaDevices.getUserMedia(constraints)
-        .then(gotStream)
-        .catch(function (error) {
-            console.log('getUserMedia error!', error);
+    setTimeout(function() {
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(gotStream)
+            .catch(function (error) {
+                console.log('getUserMedia error!', error);
 
-            if (scanning) {
-                //console.log("Stream dimensions for " + candidates[r].label + ": " + camVideo.videoWidth + "x" + camVideo.videoHeight);
-                captureResults("fail: " + error.name);
-            }
-        });
+                if (scanning) {
+                    captureResults("fail: " + error.name);
+                }
+            });
+    }, (stream ? 100 : 0));  //official examples had this at 200
 
-    function gotStream(stream) {
+
+    function gotStream(mediaStream) {
 
         //change the video dimensions
         console.log("Display size for " + candidate.label + ": " + candidate.width + "x" + candidate.height);
-        camVideo.width = candidate.width;
-        camVideo.height = candidate.height;
+        video.width = candidate.width;
+        video.height = candidate.height;
 
-        localstream = stream; // stream available to console
-        camVideo.src = window.URL.createObjectURL(stream);
-        camVideo.play();
+        window.stream = mediaStream; // make globally available
+        video.srcObject = mediaStream;
+        //video.play();
 
     }
 }
 
 
-//Attach to play event
-$('#camera').on("play", function(){
+function displayVideoDimensions() {
+    if (!video.videoWidth) {
+        setTimeout(displayVideoDimensions, 100);  //was 500
+    }
 
-    //delay timer needed for jQuery binding
-    var waitForDimensions = window.setInterval(function () {
-        //see if the video dimensions are available
-        if (camVideo.videoWidth * camVideo.videoHeight > 0) {
-            clearInterval(waitForDimensions);
-            if(tests[r].width + "x" + tests[r].height != camVideo.videoWidth + "x" + camVideo.videoHeight){
-                captureResults("fail: mismatch");
-                }
-            else{
-                captureResults("pass");
-            }
+    if (video.videoWidth * video.videoHeight > 0) {
+        if(tests[r].width + "x" + tests[r].height != video.videoWidth + "x" + video.videoHeight){
+            captureResults("fail: mismatch");
         }
-        //If not, wait another 100ms
-    }, 100);
-});
+        else{
+            captureResults("pass");
+        }
+    }
+}
+
+
+
+video.onloadedmetadata = displayVideoDimensions;
+
 
 //Save results to the candidate so
 function captureResults(status){
-    console.log("Stream dimensions for " + tests[r].label + ": " + camVideo.videoWidth + "x" + camVideo.videoHeight);
+    console.log("Stream dimensions for " + tests[r].label + ": " + video.videoWidth + "x" + video.videoHeight);
+
+    if (!scanning)   //exit if scan is not active
+        return;
 
     tests[r].status = status;
-    tests[r].streamWidth =  camVideo.videoWidth;
-    tests[r].streamHeight =  camVideo.videoHeight;
+    tests[r].streamWidth =  video.videoWidth;
+    tests[r].streamHeight =  video.videoHeight;
 
     var row = $('table#results')[0].insertRow(-1);
     var browserVer = row.insertCell(0);
@@ -230,8 +227,11 @@ function captureResults(status){
     var resIndex = row.insertCell(8);
 
     //don't show these
-    deviceIndex.style.visibility="hidden";
-    resIndex.style.visibility="hidden";
+    deviceIndex.style.display="none";
+    resIndex.style.display="none";
+
+    deviceIndex.class = "hidden";
+    resIndex.class = "hidden";
 
     browserVer.innerHTML = webrtcDetectedBrowser + " " + webrtcDetectedVersion;
     deviceName.innerHTML = selectedCamera[camNum].label;
@@ -244,6 +244,7 @@ function captureResults(status){
     resIndex.innerHTML = r;             //used for debugging
 
     r++;
+
     //go to the next tests
     if (r < tests.length){
         gum(tests[r], selectedCamera[camNum]);
@@ -254,18 +255,13 @@ function captureResults(status){
         gum(tests[r], selectedCamera[camNum])
     }
     else{ //finish up
-       $('#camera').off("play"); //turn off the event handler
-       $('button').off("click"); //turn the generic button handler this off
+       video.removeEventListener("onloadedmetadata", displayVideoDimensions); //turn off the event handler
+       $('button').off("click"); //turn the generic button handler  off
 
         scanning = false;
-        //dump JSON results to a new window when this button is pressed
-        $('#jsonOut').show().prop("disabled", false).click(function(){
-            var url = 'data:text/json;charset=utf8,' + encodeURIComponent(JSON.stringify(tests));
-            window.open(url, '_blank');
-            window.focus();
-        });
 
-        $('#csvOut').show().prop("disabled", false).click(function(){
+        $(".pfin").show();
+        $('#csvOut').click(function(){
             exportTableToCSV.apply(this, [$('#results'), 'gumResTestExport.csv']);
             });
 
@@ -395,14 +391,15 @@ function createAllResolutions(minHeight, maxHeight){
     console.log("resolutions length: " + resolutions.length);
     return resolutions;
 }
-/*
-Export results table to a CSV file in new window for download
-source: http://jsfiddle.net/terryyounghk/KPEGU/
-*/
-function exportTableToCSV($table) {
 
-    console.log("export table");
-    var $rows = $table.find('tr:has(td),tr:has(th)'),
+
+/*
+ Export results table to a CSV file in new window for download
+ source: http://jsfiddle.net/terryyounghk/KPEGU/
+ */
+function exportTableToCSV($table, filename) {
+
+    var $rows = $table.find('tr:has(td)'),
 
     // Temporary delimiter characters unlikely to be typed by keyboard
     // This is to avoid accidentally splitting the actual contents
@@ -414,27 +411,29 @@ function exportTableToCSV($table) {
         rowDelim = '"\r\n"',
 
     // Grab text from table into CSV formatted string
-        csv = '"' + $rows.map(function (i, row) {
-            var $row = $(row),
-                $cols = $row.find('td,th');
+        csv = '"' + $rows.map(function(i, row) {
+                var $row = $(row),
+                    $cols = $row.find('td');
 
-            return $cols.map(function (j, col) {
-                var $col = $(col),
-                    text = $col.text();
+                return $cols.map(function(j, col) {
+                    var $col = $(col),
+                        text = $col.text();
 
-                return text.replace('"', '""'); // escape double quotes
+                    return text.replace(/"/g, '""'); // escape double quotes
 
-            }).get().join(tmpColDelim);
+                }).get().join(tmpColDelim);
 
-        }).get().join(tmpRowDelim)
-            .split(tmpRowDelim).join(rowDelim)
-            .split(tmpColDelim).join(colDelim) + '"',
+            }).get().join(tmpRowDelim)
+                .split(tmpRowDelim).join(rowDelim)
+                .split(tmpColDelim).join(colDelim) + '"',
 
     // Data URI
         csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
 
-    window.open(csvData, '_blank');
-    //window.focus();
-
+    $(this)
+        .attr({
+            'download': filename,
+            'href': csvData,
+            'target': '_blank'
+        });
 }
-

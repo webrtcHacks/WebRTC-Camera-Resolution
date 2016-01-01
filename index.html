@@ -1,89 +1,73 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
     <head>
         <meta charset="utf-8" />
-        <title>webrtcHacks Camera Resolution Finder</title>
-
-        <!reuse the webrtcHacks style sheet!>
-        <link rel="stylesheet" type="text/css" href="css/style.css">
+        <title>WebRTC Camera Resolution Finder</title>
+        <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     </head>
-    <style type="text/css">
-        button{
-            width: 100%;
-        }
-        button#jsonOut, #csvOut{
-            width: auto;
-        }
-        p{
-           line-height: 1.5em;
-           margin: 5px;
-        }
-        div#quickArea{
-            vertical-align: top;
-            float: left;
-            width: 200px;
-            border: solid lightgray 1px;
-            min-height: 100px;
-            margin-right: 10px;
+    <style>
+        .row {
+            margin-left: 10px;
             padding: 5px;
         }
-        div#fullArea{
-            vertical-align: top;
-            float: left;
-            width: 200px;
-            border: solid lightgray 1px;
-            min-height: 100px;
-            margin-bottom: 10px;
-            padding: 5px;
+        .scanarea {
+            max-width: 350px;
+            height: 100px;
         }
-        video{
-            border-width: thin;
-            border-color: gray;
-            border-style: dotted;
-            background-color: lightgray;
+        video {
             transform: scale(-1, 1); /*For Firefox (& IE) */
             -webkit-transform: scale(-1, 1); /*for Chrome & Opera (& Safari) */
-            clear: both;
-            display: block;
         }
-
+        table th.hidden {
+            display: none;
+            border: none;
+            visibility: hidden;
+        }
     </style>
+
     <body>
         <div id="container">
-
-            <h1>getUserMedia camera resolution finder</h1>
-            <div id="selectArea" hidden>
-                <p>Select camera(s) below:</p>
-                <select id="devices" name="Video devices" multiple></select>
-            </div>
-            <p>Click one of the buttons below to find camera resolutions.</p>
-            <div id="controlArea">
-                <div id="quickArea">
-                <button id="quickButton">Quick Scan</button>
-                <p id="quickLabel"></p>
+            <div class="row">
+                <h2>WebRTC getUserMedia camera resolution finder</h2>
+                <div id="selectArea" hidden>
+                    <h4>Select camera(s) below:</h4>
+                    <select id="devices" name="Video devices" multiple title="devices"></select>
                 </div>
-
-                <div id="fullArea">
-                <button id="fullButton">Full Scan</button>
-                    <p>vertical resolution range: </p>
-                    <p>max:
-                        <input type="text" id="hiRes" VALUE="720" size="2" maxlength="4" max="2160" pattern="[0-9]{1,4}" />
+            </div>
+            <div class="row" id="controlArea">
+                <h4>Click one of the buttons below to find camera resolutions:</h4>
+                <div class="col-sm-6 scanarea well well-sm" id="quickArea">
+                    <button class="btn btn-primary btn-block" id="quickButton">Quick Scan</button>
+                    <p id="quickLabel"></p>
+                </div>
+                <div class="col-sm-6 scanarea well well-sm" id="fullArea">
+                    <button class="btn btn-primary btn-block" id="fullButton">Full Scan</button>
+                    <p>vertical resolution range: <br>
+                    <span>  max:
+                        <input type="text" id="hiRes" value="720" size="4" maxlength="4" max="2160" pattern="[0-9]{1,4}" title="hiRes" />
                          to min:
-                        <input type="text" id="loRes" VALUE="240" size="2" maxlength="4" max="2160" pattern="[0-9]{1,4}"/>
-                    </p>
+                        <input type="text" id="loRes" value="240" size="4" maxlength="4" max="2160" pattern="[0-9]{1,4}" title="lowRes"/>
+                    </span></p>
                 </div>
             </div>
-            <video id="camera" autoplay></video>
-            <table id="results" border="1" hidden >
-                <tr><th>Browser</th><th>Device</th><th>Res Name</th><th>Ratio</th><th>Ask</th><th>Actual</th><th>Status</th><th hidden>DeviceIndex</th><th hidden>ResIndex</th></tr>
-            </table>
-            <button id="jsonOut" hidden>Dump JSON results</button><button id="csvOut" hidden>CSV export</button>
-            <p>Visit <a href="http://webrtchacks.com">webrtcHacks.com</a> for more details.</p>
+            <div class="row" id="videoarea">
+                <video id="video" autoplay></video>
+            </div>
+            <div class="row">
+                <table class="table-condensed table-bordered table-striped"	id="results" hidden >
+                    <tr><th>Browser</th><th>Device</th><th>Res Name</th><th>Ratio</th><th>Ask</th><th>Actual</th><th>Status</th><th class="hidden">deviceIndex</th><th class="hidden">resIndex</th></tr>
+                </table>
+                <h5 class="pfin" hidden><a href=".">Refresh</a> to run test again with same or different parameters (you'll lose the table above). </h5>
+                <h5 class="pfin" hidden>Export results to a CSV file here: <a id="csvOut" href="#" class="btn btn-link btn-md">gumResTestExport.csv</a></h5>
+            </div>
+            <div class="row">
+                <h4>Visit <a href="http://webrtchacks.com">webrtcHacks.com</a> for more details.</h4>
+            </div>
         </div>
         <script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-        <!-- Load the polyfill to switch-hit between Chrome and Firefox -->
-        <script src="js/adapter.js"></script>
+        <script src="js/adapter.js"></script>        <!-- Load the polyfill to switch-hit between Chrome and Firefox -->
         <script src="js/resolutionScan.js"></script>
     </body>
 </html>
