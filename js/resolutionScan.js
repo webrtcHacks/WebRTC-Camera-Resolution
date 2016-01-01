@@ -19,14 +19,17 @@ var camVideo = $('#camera')[0],     //where we will put & test our video output
 
 function gotDevices(deviceInfos) {
     $('#selectArea').show();
+    console.log(deviceInfos);
+    var camcount = 1;   //used for labeling if the device label is not enumerated
     for (var i = 0; i !== deviceInfos.length; ++i) {
         var deviceInfo = deviceInfos[i];
         var option = document.createElement('option');
         option.value = deviceInfo.deviceId;
         if (deviceInfo.kind === 'videoinput') {
-            option.text = deviceInfo.label || 'camera ' + (videoSelect.length + 1);
+            option.text = deviceInfo.label || 'camera ' + camcount;
             devices.push(option);
             deviceList.add(option);
+            camcount++;
         }
     }
 }
@@ -77,8 +80,8 @@ $('button').click(function(){
     }
     //setup for a full scan and build scan object based on inputs
     else if (this.innerHTML == "Full Scan"){
-        var highRes = $('#hiRes')[0].val();
-        var lowRes = $('#loRes')[0].val();
+        var highRes = $('#hiRes').val();
+        var lowRes = $('#loRes').val();
         console.log("Full scan from " + lowRes + " to " + highRes);
         tests = createAllResolutions(parseInt(lowRes), parseInt(highRes) );
     }
