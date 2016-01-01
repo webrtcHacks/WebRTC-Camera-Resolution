@@ -29,6 +29,7 @@ function gotDevices(deviceInfos) {
             deviceList.add(option);
             camcount++;
         }
+    }
 }
 
 function errorCallback(error) {
