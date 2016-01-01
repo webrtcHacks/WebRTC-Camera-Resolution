@@ -6,7 +6,7 @@
 //Global variables
 var camVideo = $('#camera')[0],     //where we will put & test our video output
     deviceList = $('#devices')[0],  //device list dropdown
-    devices,                        //getSources object to hold various camera options
+    devices = [],                        //getSources object to hold various camera options
     localStream,
     selectedCamera = [],            //used to hold a camera's ID and other parameters
     tests,                          //holder for our test results
@@ -14,60 +14,30 @@ var camVideo = $('#camera')[0],     //where we will put & test our video output
     camNum = 0,                     //used for iterating through number of camera
     scanning = false;               //variable to show if we are in the middle of a scan
 
-/*
-Get and list camera devices using MediaStreamTrack.getSources
-Inspiration 1: https://code.google.com/p/webrtc/source/browse/stable/samples/js/demos/html/device-switch.html
-Inspiration 2: https://raw.githubusercontent.com/muaz-khan/WebRTC-Experiment/master/demos/MediaStreamTrack.getSources.html
-*/
-function listVideoDevices(){
 
-    var videoDevices = [];
-    if(!MediaStreamTrack.getSources) //note for the future: getSources changing to getMediaDevices
-    {
-        console.log("No media stream track enumeration");
-        return;
+
+
+function gotDevices(deviceInfos) {
+    $('#selectArea').show();
+    for (var i = 0; i !== deviceInfos.length; ++i) {
+        var deviceInfo = deviceInfos[i];
+        var option = document.createElement('option');
+        option.value = deviceInfo.deviceId;
+        if (deviceInfo.kind === 'videoinput') {
+            option.text = deviceInfo.label || 'camera ' + (videoSelect.length + 1);
+            devices.push(option);
+            deviceList.add(option);
+        }
     }
-
-    MediaStreamTrack.getSources(function (deviceOptions){
-        if (deviceOptions){
-            $('#selectArea').show();
-            var camNum = 1; //count the number of cameras for id if device label is unavailable
-            for (var x=0; x<deviceOptions.length; x++){
-                if (deviceOptions[x].kind == 'video') {
-
-                    //define our own Options so we can modify it if needed
-                    //needed for http & when label attribute is empty & we have to assign one
-                    var camOption = {
-                        label: deviceOptions[x].label,
-                        id: deviceOptions[x].id
-                    };
-
-                    var listOption = document.createElement("option");
-
-                    //label should already exists if previous approval on HTTPS site
-                    if (deviceOptions[x].label) {
-                        listOption.text = deviceOptions[x].label;
-                    }
-                    else {
-                        //Add a label if none exists (happens before first user capture approval)
-                        camOption.label = listOption.text = "Camera " + camNum;
-                        camNum++;
-                    }
-                    deviceList.add(listOption);                 //update the pull down list
-                    videoDevices.push(camOption);               //only add video devices
-                    console.log("Camera found: " + JSON.stringify(deviceOptions[x]));
-
-                    //selectedCamera = devices[0];    //set the default camera in case there is no user selection
-                }
-            }
-        }
-        else {
-            console.log("No device sources found");
-        }
-    });
-
-    return videoDevices;
 }
+
+function errorCallback(error) {
+    console.log('navigator.getUserMedia error: ', error);
+}
+
+navigator.mediaDevices.enumerateDevices()
+    .then(gotDevices)
+    .catch(errorCallback);
 
 //find & list camera devices on load
 $(document).ready(function(){
@@ -86,12 +56,12 @@ $(document).ready(function(){
         document.location.href = "https:" + document.location.href.substring(document.location.protocol.length);
     }
 
-    devices = listVideoDevices();
+    //devices = listVideoDevices();
 
     //Show text of what res's are used on QuickScan
     var quickText = "Sizes:";
-    for(var l in quickScan){
-        quickText +=  " " + quickScan[l].label
+    for(var q=0; q < quickScan.length;  q++){
+        quickText +=  " " + quickScan[q].label
     }
     $('#quickLabel').text(quickText);
 
@@ -107,8 +77,8 @@ $('button').click(function(){
     }
     //setup for a full scan and build scan object based on inputs
     else if (this.innerHTML == "Full Scan"){
-        var highRes = $('#hiRes').val();
-        var lowRes = $('#loRes').val();
+        var highRes = $('#hiRes')[0].val();
+        var lowRes = $('#loRes')[0].val();
         console.log("Full scan from " + lowRes + " to " + highRes);
         tests = createAllResolutions(parseInt(lowRes), parseInt(highRes) );
     }
@@ -120,13 +90,19 @@ $('button').click(function(){
 
     //if there is device enumeration
     if (devices){
+
         //run through the deviceList to see what is selected
          for (var deviceCount=0, d=0; d<deviceList.length; d++){
             if(deviceList[d].selected){
                 //if it is selected, check the label against the getSources array to select the proper ID
-                for(z=0; z<devices.length; z++) {
-                    if (devices[z].label == deviceList[d].value) {
-                        selectedCamera[deviceCount] = devices[z];
+                for(var z=0; z<devices.length; z++) {
+                    if (devices[z].value == deviceList[d].value) {
+
+                        //just pass along the id and label
+                        var camera = {};
+                        camera.id = devices[z].value;
+                        camera.label = devices[z].text;
+                        selectedCamera[deviceCount] = camera;
                         console.log(selectedCamera[deviceCount].label + "[" + selectedCamera[deviceCount].id  + "] selected");
                         deviceCount++;
                     }
@@ -136,10 +112,16 @@ $('button').click(function(){
 
         //Make sure there is at least 1 camera selected before starting
         if (selectedCamera[0]) {
-            gum(tests[r], selectedCamera[camNum].id);
+            gum(tests[r], selectedCamera[0]);
         }
         else{
-            alert("You must select a camera first");
+            console.log("No camera selected. Defaulting to " + deviceList[0].text);
+            //$('button').prop("disabled",false);
+
+
+            selectedCamera[0] = {id: deviceList[0].value, label: deviceList[0].text};
+            gum(tests[r], selectedCamera[0]);
+
         }
     }
     //if no device enumeration don't pass a Camera ID
@@ -151,9 +133,8 @@ $('button').click(function(){
 });
 
 //calls getUserMedia for a given camera and constraints
-function gum(candidate, camId) {
-
-    console.log("trying " + candidate.label);
+function gum(candidate, device) {
+    console.log("trying " + candidate.label + " on " + device.label);
 
     //Kill any running streams;
     if (localStream) {
@@ -171,7 +152,7 @@ function gum(candidate, camId) {
         audio: false,
         video: {
             mandatory: {
-                sourceId: camId,
+                sourceId: device.id,
                 minWidth: candidate.width,
                 minHeight: candidate.height,
                 maxWidth: candidate.width,
@@ -192,9 +173,6 @@ function gum(candidate, camId) {
             }
         });
 
-
-    //getUserMedia(constraints, onStream, onFail);  //getUserMedia call
-
     function gotStream(stream) {
 
         //change the video dimensions
@@ -208,16 +186,6 @@ function gum(candidate, camId) {
 
     }
 }
-/*
-    function onFail(error) {
-        console.log('Video error!', error);
-
-        if (scanning) {
-            //console.log("Stream dimensions for " + candidates[r].label + ": " + camVideo.videoWidth + "x" + camVideo.videoHeight);
-            captureResults("fail: " + error.name);
-        }
-}
-}*/
 
 
 //Attach to play event
@@ -235,7 +203,7 @@ $('#camera').on("play", function(){
                 captureResults("pass");
             }
         }
-        //If not, wait another 50ms
+        //If not, wait another 100ms
     }, 100);
 });
 
@@ -275,12 +243,12 @@ function captureResults(status){
     r++;
     //go to the next tests
     if (r < tests.length){
-        gum(tests[r], selectedCamera[camNum].id);
+        gum(tests[r], selectedCamera[camNum]);
     }
     else if (camNum < selectedCamera.length -1){     //move on to the next camera
         camNum++;
         r=0;
-        gum(tests[r], selectedCamera[camNum].id)
+        gum(tests[r], selectedCamera[camNum])
     }
     else{ //finish up
        $('#camera').off("play"); //turn off the event handler
@@ -311,14 +279,15 @@ function clickRows(){
         r = $(this).find("td").eq(8).html();
 
         //lookup the device id based on the row label
-        for(z=0; z<devices.length; z++) {
-            if(devices[z].label== $(this).find("td").eq(1).html()){
-                var thisCamId = devices[z].id;
+        for(z=0; z<selectedCamera.length; z++) {
+            if(selectedCamera[z].label== $(this).find("td").eq(1).html()){
+                var thisCam = selectedCamera[z]; //devices[z].value;
+                console.log(this)
             }
         }
 
-        console.log("table click! clicked on " + tests[r].label );
-        gum(tests[r], thisCamId);
+        console.log("table click! clicked on " + thisCam + ":" + tests[r].label );
+        gum(tests[r], thisCam);
     })
 }
 
@@ -326,13 +295,13 @@ function clickRows(){
 //Variables to use in the quick scan
 const quickScan = [
     {
-        "label": "4K",
+        "label": "4K(UHD)",
         "width" : 3840,
         "height": 2160,
         "ratio": "16:9"
     },
     {
-        "label": "1080p",
+        "label": "1080p(FHD)",
         "width": 1920,
         "height": 1080,
         "ratio": "16:9"
@@ -344,7 +313,7 @@ const quickScan = [
         "ratio": "4:3"
     },
     {
-        "label": "720p",
+        "label": "720p(HD)",
         "width": 1280,
         "height": 720,
         "ratio": "16:9"
@@ -362,7 +331,7 @@ const quickScan = [
         "ratio": "4:3"
     },
     {
-        "label": "360p",
+        "label": "360p(nHD)",
         "width": 640,
         "height": 360,
         "ratio": "16:9"
