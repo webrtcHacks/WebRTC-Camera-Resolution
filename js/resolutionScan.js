@@ -145,14 +145,16 @@ function gum(candidate, device) {
     var constraints = {
         audio: false,
         video: {
-            mandatory: {
+            /*mandatory: {
                 sourceId: device.id,
-                minWidth: candidate.width,
+                minWidth: {candidate.width,
                 minHeight: candidate.height,
                 maxWidth: candidate.width,
-                maxHeight: candidate.height
+                maxHeight: candidate.height*/
+                width: {exact: candidate.width},    //new syntax
+                height: {exact: candidate.height}   //new syntax
 
-            }
+           // }
         }
     };
 
@@ -166,7 +168,7 @@ function gum(candidate, device) {
                     captureResults("fail: " + error.name);
                 }
             });
-    }, (stream ? 100 : 0));  //official examples had this at 200
+    }, (stream ? 200 : 0));  //official examples had this at 200
 
 
     function gotStream(mediaStream) {
@@ -186,7 +188,7 @@ function gum(candidate, device) {
 
 function displayVideoDimensions() {
     if (!video.videoWidth) {
-        setTimeout(displayVideoDimensions, 100);  //was 500
+        setTimeout(displayVideoDimensions, 500);  //was 500
     }
 
     if (video.videoWidth * video.videoHeight > 0) {
