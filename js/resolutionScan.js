@@ -18,20 +18,17 @@ var video = $('#video')[0],     //where we will put & test our video output
 
 function gotDevices(deviceInfos) {
     $('#selectArea').show();
-    setTimeout(function(){
-        var camcount = 1;   //used for labeling if the device label is not enumerated
-        for (var i = 0; i !== deviceInfos.length; ++i) {
-            var deviceInfo = deviceInfos[i];
-            var option = document.createElement('option');
-            option.value = deviceInfo.deviceId;
-            if (deviceInfo.kind === 'videoinput') {
-                option.text = deviceInfo.label || 'camera ' + camcount;
-                devices.push(option);
-                deviceList.add(option);
-                camcount++;
-            }
+    var camcount = 1;   //used for labeling if the device label is not enumerated
+    for (var i = 0; i !== deviceInfos.length; ++i) {
+        var deviceInfo = deviceInfos[i];
+        var option = document.createElement('option');
+        option.value = deviceInfo.deviceId;
+        if (deviceInfo.kind === 'videoinput') {
+            option.text = deviceInfo.label || 'camera ' + camcount;
+            devices.push(option);
+            deviceList.add(option);
+            camcount++;
         }
-    }, 500);
 }
 
 function errorCallback(error) {
