@@ -6,26 +6,28 @@
         <title>WebRTC Camera Resolution Finder</title>
         <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+        <style>
+            .row {
+                margin-left: 10px;
+                padding: 5px;
+            }
+            .scanarea {
+                max-width: 350px;
+                height: 100px;
+            }
+            video {
+                transform: scale(-1, 1); /*For Firefox (& IE) */
+                -webkit-transform: scale(-1, 1); /*for Chrome & Opera (& Safari) */
+            }
+            table th.hidden {
+                display: none;
+                border: none;
+                visibility: hidden;
+            }
+        </style>
+
     </head>
-    <style>
-        .row {
-            margin-left: 10px;
-            padding: 5px;
-        }
-        .scanarea {
-            max-width: 350px;
-            height: 100px;
-        }
-        video {
-            transform: scale(-1, 1); /*For Firefox (& IE) */
-            -webkit-transform: scale(-1, 1); /*for Chrome & Opera (& Safari) */
-        }
-        table th.hidden {
-            display: none;
-            border: none;
-            visibility: hidden;
-        }
-    </style>
 
     <body>
         <div id="container">
