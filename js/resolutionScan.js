@@ -142,6 +142,9 @@ function gum(candidate, device) {
         stream.getTracks().forEach(function (track) {
             track.stop();
         });
+        //try this for FF
+        if (video.mozSrcObject)
+            video.mozSrcObject.stop();
     }
 
     //create constraints object
