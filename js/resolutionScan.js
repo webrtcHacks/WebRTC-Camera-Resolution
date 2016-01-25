@@ -405,7 +405,7 @@ function createAllResolutions(minHeight, maxHeight){
  */
 function exportTableToCSV($table, filename) {
 
-    var $rows = $table.find('tr:has(td)'),
+    var $rows = $table.find('tr:has(th), tr:has(td)'),
 
     // Temporary delimiter characters unlikely to be typed by keyboard
     // This is to avoid accidentally splitting the actual contents
@@ -419,7 +419,7 @@ function exportTableToCSV($table, filename) {
     // Grab text from table into CSV formatted string
         csv = '"' + $rows.map(function(i, row) {
                 var $row = $(row),
-                    $cols = $row.find('td');
+                    $cols = $row.find('th, td');
 
                 return $cols.map(function(j, col) {
                     var $col = $(col),
