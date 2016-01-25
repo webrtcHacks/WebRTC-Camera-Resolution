@@ -6,7 +6,7 @@
         <title>WebRTC Camera Resolution Finder</title>
         <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-
+        <link rel="shortcut icon" href="https://webrtchacks.com/wp-content/themes/parament/favicon.ico">
         <style>
             .row {
                 margin-left: 10px;
@@ -58,18 +58,21 @@
                 <video id="video" autoplay></video>
             </div>
             <div class="row">
+                <p id="jump" hidden>Jump to <a href="#bottom">bottom</a> of table</p>
                 <table class="table-condensed table-bordered table-striped"	id="results" hidden >
                     <tr><th>Browser</th><th>Device</th><th>Res Name</th><th>Ratio</th><th>Ask</th><th>Actual</th><th>Status</th><th class="hidden">deviceIndex</th><th class="hidden">resIndex</th></tr>
                 </table>
                 <h5 class="pfin" hidden><a href=".">Refresh</a> to run test again with same or different parameters (you'll lose the table above). </h5>
                 <h5 class="pfin" hidden>Export results to a CSV file here: <a id="csvOut" href="#" class="btn btn-link btn-md">gumResTestExport.csv</a></h5>
             </div>
+            <div id="bottom"></div>
             <div class="row">
                 <h4>Visit <a href="http://webrtchacks.com">webrtcHacks.com</a> for more details.</h4>
             </div>
         </div>
         <script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-        <script src="js/adapter.js"></script>        <!-- Load the polyfill to switch-hit between Chrome and Firefox -->
+        <!--script src="js/adapter.js"></script>        <!-- Load the polyfill to switch-hit between Chrome and Firefox -->
+        <script src="https://webrtc.github.io/samples/src/js/adapter.js"></script>
         <script src="js/resolutionScan.js"></script>
     </body>
 </html>

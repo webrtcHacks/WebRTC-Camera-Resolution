@@ -4,6 +4,8 @@
  * Modified January 1, 2016
  */
 
+'use strict';
+
 //Global variables
 var video = $('#video')[0],     //where we will put & test our video output
 //var video = document.querySelector('video'), //where we will put & test our video output
@@ -86,6 +88,7 @@ $('button').click(function(){
     scanning = true;
     $('button').prop("disabled",true);
     $('table').show();
+    $('#jump').show();
 
     //if there is device enumeration
     if (devices){
@@ -275,12 +278,13 @@ function captureResults(status){
 }
 
 //allow clicking on a row to see the camera capture
+//To do: figure out why this doesn't work in Firefox
 function clickRows(){
     $('tr').click(function(){
         r = $(this).find("td").eq(8).html();
 
         //lookup the device id based on the row label
-        for(z=0; z<selectedCamera.length; z++) {
+        for(var z=0; z<selectedCamera.length; z++) {
             if(selectedCamera[z].label== $(this).find("td").eq(1).html()){
                 var thisCam = selectedCamera[z]; //devices[z].value;
                 console.log(this)
@@ -375,17 +379,17 @@ function createAllResolutions(minHeight, maxHeight){
     for (var y=maxHeight; y>=minHeight; y--){
         //HD
         res = {
-            "height": y,
-            "width": (y * ratioHD).toFixed(),
             "label": (y * ratioHD).toFixed() + "x" + y,
+            "width": parseInt((y * ratioHD).toFixed()), //this was returning a string
+            "height": y,
             "ratio": "16:9"
         };
         resolutions.push(res);
         //SD
         res = {
-            "height": y,
-            "width" : (y * ratioSD).toFixed(),
             "label": (y * ratioSD).toFixed() + "x" + y,
+            "width" : parseInt((y * ratioSD).toFixed()),
+            "height": y,
             "ratio": "4:3"
         };
         resolutions.push(res);
