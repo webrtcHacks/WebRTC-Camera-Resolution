@@ -157,6 +157,7 @@ function gum(candidate, device) {
                 minHeight: candidate.height,
                 maxWidth: candidate.width,
                 maxHeight: candidate.height*/
+                deviceId: device.id ? {exact: device.id} : undefined,
                 width: {exact: candidate.width},    //new syntax
                 height: {exact: candidate.height}   //new syntax
 
