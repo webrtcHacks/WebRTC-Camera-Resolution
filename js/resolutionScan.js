@@ -389,6 +389,7 @@ function createAllResolutions(minHeight, maxHeight){
             "ratio": "16:9"
         };
         resolutions.push(res);
+
         //SD
         res = {
             "label": (y * ratioSD).toFixed() + "x" + y,
@@ -397,6 +398,16 @@ function createAllResolutions(minHeight, maxHeight){
             "ratio": "4:3"
         };
         resolutions.push(res);
+
+        //square
+        res = {
+            "label": y + "x" + y,
+            "width" : y,
+            "height": y,
+            "ratio": "1:1"
+        };
+        resolutions.push(res);
+
     }
     console.log("resolutions length: " + resolutions.length);
     return resolutions;
