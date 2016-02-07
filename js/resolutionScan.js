@@ -55,7 +55,8 @@ $(document).ready(function(){
 
     //check if the user is using http vs. https & redirect to https if needed
     if (document.location.protocol != "https:"){
-        alert("This doesn't work well on http. Redirecting to https");
+        $(document).html("This doesn't work well on http. Redirecting to https");
+        console.log("redirecting to https");
         document.location.href = "https:" + document.location.href.substring(document.location.protocol.length);
     }
 
@@ -142,26 +143,15 @@ function gum(candidate, device) {
         stream.getTracks().forEach(function (track) {
             track.stop();
         });
-        //try this for FF
-        if (video.mozSrcObject)
-            video.mozSrcObject.stop();
     }
 
     //create constraints object
     var constraints = {
         audio: false,
         video: {
-            /*mandatory: {
-                sourceId: device.id,
-                minWidth: {candidate.width,
-                minHeight: candidate.height,
-                maxWidth: candidate.width,
-                maxHeight: candidate.height*/
                 deviceId: device.id ? {exact: device.id} : undefined,
                 width: {exact: candidate.width},    //new syntax
                 height: {exact: candidate.height}   //new syntax
-
-           // }
         }
     };
 
@@ -187,7 +177,6 @@ function gum(candidate, device) {
 
         window.stream = mediaStream; // make globally available
         video.srcObject = mediaStream;
-        //video.play();
 
     }
 }
@@ -400,6 +389,7 @@ function createAllResolutions(minHeight, maxHeight){
         resolutions.push(res);
 
         //square
+        //noinspection JSSuspiciousNameCombination
         res = {
             "label": y + "x" + y,
             "width" : y,
