@@ -45,21 +45,23 @@ navigator.mediaDevices.enumerateDevices()
 //find & list camera devices on load
 $(document).ready(function(){
 
-    console.log("adapter.js says this is " + webrtcDetectedBrowser + " " + webrtcDetectedVersion);
+    console.log("adapter.js says this is " + adapter.browserDetails.browser + " " + adapter.browserDetails.version);
 
-    if (!getUserMedia){
+    if (!navigator.getUserMedia){
         alert('You need a browser that supports WebRTC');
         $("div").hide();
         return;
     }
 
-    //check if the user is using http vs. https & redirect to https if needed
-    if (document.location.protocol != "https:"){
-        $(document).html("This doesn't work well on http. Redirecting to https");
-        console.log("redirecting to https");
-        document.location.href = "https:" + document.location.href.substring(document.location.protocol.length);
+    //Localhost unsecure http connections are allowed
+    if (document.location.hostname !== "localhost") {
+        //check if the user is using http vs. https & redirect to https if needed
+        if (document.location.protocol != "https:"){
+            $(document).html("This doesn't work well on http. Redirecting to https");
+            console.log("redirecting to https");
+            document.location.href = "https:" + document.location.href.substring(document.location.protocol.length);
+        }
     }
-
     //Show text of what res's are used on QuickScan
     var quickText = "Sizes:";
     for(var q=0; q < quickScan.length;  q++){
@@ -231,7 +233,7 @@ function captureResults(status){
     deviceIndex.class = "hidden";
     resIndex.class = "hidden";
 
-    browserVer.innerHTML = webrtcDetectedBrowser + " " + webrtcDetectedVersion;
+    browserVer.innerHTML = adapter.browserDetails.browser + " " + adapter.browserDetails.version;
     deviceName.innerHTML = selectedCamera[camNum].label;
     label.innerHTML = tests[r].label;
     ratio.innerHTML = tests[r].ratio;
