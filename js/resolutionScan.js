@@ -7,8 +7,7 @@
 'use strict';
 
 //Global variables
-var video = $('#video')[0],     //where we will put & test our video output
-//var video = document.querySelector('video'), //where we will put & test our video output
+let video = $('#video')[0],     //where we will put & test our video output
     deviceList = $('#devices')[0],          //device list dropdown
     devices = [],                        //getSources object to hold various camera options
     stream,
@@ -20,10 +19,10 @@ var video = $('#video')[0],     //where we will put & test our video output
 
 function gotDevices(deviceInfos) {
     $('#selectArea').show();
-    var camcount = 1;   //used for labeling if the device label is not enumerated
-    for (var i = 0; i !== deviceInfos.length; ++i) {
-        var deviceInfo = deviceInfos[i];
-        var option = document.createElement('option');
+    let camcount = 1;   //used for labeling if the device label is not enumerated
+    for (let i = 0; i !== deviceInfos.length; ++i) {
+        let deviceInfo = deviceInfos[i];
+        let option = document.createElement('option');
         option.value = deviceInfo.deviceId;
         if (deviceInfo.kind === 'videoinput') {
             option.text = deviceInfo.label || 'camera ' + camcount;
@@ -38,77 +37,93 @@ function errorCallback(error) {
     console.log('navigator.getUserMedia error: ', error);
 }
 
-navigator.mediaDevices.enumerateDevices()
-    .then(gotDevices)
-    .catch(errorCallback);
 
 //find & list camera devices on load
-$(document).ready(function(){
+$(document).ready(() => {
 
     console.log("adapter.js says this is " + adapter.browserDetails.browser + " " + adapter.browserDetails.version);
 
-    if (!navigator.getUserMedia){
+    if (!navigator.getUserMedia) {
         alert('You need a browser that supports WebRTC');
         $("div").hide();
         return;
     }
 
+    //Call gUM early to force user gesture and allow device enumeration
+    navigator.mediaDevices.getUserMedia({audio: false, video: true})
+        .then((mediaStream) => {
+
+            window.stream = mediaStream; // make globally available
+            video.srcObject = mediaStream;
+
+            //Now enumerate devices
+            navigator.mediaDevices.enumerateDevices()
+                .then(gotDevices)
+                .catch(errorCallback);
+
+        })
+        .catch((error) => {
+            console.error('getUserMedia error!', error);
+        });
+
     //Localhost unsecure http connections are allowed
     if (document.location.hostname !== "localhost") {
         //check if the user is using http vs. https & redirect to https if needed
-        if (document.location.protocol != "https:"){
+        if (document.location.protocol !== "https:") {
             $(document).html("This doesn't work well on http. Redirecting to https");
             console.log("redirecting to https");
             document.location.href = "https:" + document.location.href.substring(document.location.protocol.length);
         }
     }
     //Show text of what res's are used on QuickScan
-    var quickText = "Sizes:";
-    for(var q=0; q < quickScan.length;  q++){
-        quickText +=  " " + quickScan[q].label
+    let quickText = "Sizes:";
+    for (let q = 0; q < quickScan.length; q++) {
+        quickText += " " + quickScan[q].label
     }
     $('#quickLabel').text(quickText);
 
 });
 
 //Start scan by controlling the quick and full scan buttons
-$('button').click(function(){
+$('button').click(() => {
 
     //setup for a quick scan using the hand-built quickScan object
-    if (this.innerHTML == "Quick Scan"){
+    if (this.innerHTML === "Quick Scan") {
         console.log("Quick scan");
         tests = quickScan;
     }
     //setup for a full scan and build scan object based on inputs
-    else if (this.innerHTML == "Full Scan"){
-        var highRes = $('#hiRes').val();
-        var lowRes = $('#loRes').val();
+    else if (this.innerHTML === "Full Scan") {
+        let highRes = $('#hiRes').val();
+        let lowRes = $('#loRes').val();
         console.log("Full scan from " + lowRes + " to " + highRes);
-        tests = createAllResolutions(parseInt(lowRes), parseInt(highRes) );
+        tests = createAllResolutions(parseInt(lowRes), parseInt(highRes));
     }
-    else { return }
+    else {
+        return
+    }
 
     scanning = true;
-    $('button').prop("disabled",true);
+    $('button').prop("disabled", true);
     $('table').show();
     $('#jump').show();
 
     //if there is device enumeration
-    if (devices){
+    if (devices) {
 
         //run through the deviceList to see what is selected
-         for (var deviceCount=0, d=0; d<deviceList.length; d++){
-            if(deviceList[d].selected){
+        for (let deviceCount = 0, d = 0; d < deviceList.length; d++) {
+            if (deviceList[d].selected) {
                 //if it is selected, check the label against the getSources array to select the proper ID
-                for(var z=0; z<devices.length; z++) {
-                    if (devices[z].value == deviceList[d].value) {
+                for (let z = 0; z < devices.length; z++) {
+                    if (devices[z].value === deviceList[d].value) {
 
                         //just pass along the id and label
-                        var camera = {};
+                        let camera = {};
                         camera.id = devices[z].value;
                         camera.label = devices[z].text;
                         selectedCamera[deviceCount] = camera;
-                        console.log(selectedCamera[deviceCount].label + "[" + selectedCamera[deviceCount].id  + "] selected");
+                        console.log(selectedCamera[deviceCount].label + "[" + selectedCamera[deviceCount].id + "] selected");
                         deviceCount++;
                     }
                 }
@@ -119,7 +134,7 @@ $('button').click(function(){
         if (selectedCamera[0]) {
             gum(tests[r], selectedCamera[0]);
         }
-        else{
+        else {
             console.log("No camera selected. Defaulting to " + deviceList[0].text);
             //$('button').prop("disabled",false);
 
@@ -129,7 +144,7 @@ $('button').click(function(){
         }
     }
     //if no device enumeration don't pass a Camera ID
-    else{
+    else {
         selectedCamera[0] = {label: "Unknown"};
         gum(tests[r]);
     }
@@ -142,25 +157,25 @@ function gum(candidate, device) {
 
     //Kill any running streams;
     if (stream) {
-        stream.getTracks().forEach(function (track) {
+        stream.getTracks().forEach((track) => {
             track.stop();
         });
     }
 
     //create constraints object
-    var constraints = {
+    let constraints = {
         audio: false,
         video: {
-                deviceId: device.id ? {exact: device.id} : undefined,
-                width: {exact: candidate.width},    //new syntax
-                height: {exact: candidate.height}   //new syntax
+            deviceId: device.id ? {exact: device.id} : undefined,
+            width: {exact: candidate.width},    //new syntax
+            height: {exact: candidate.height}   //new syntax
         }
     };
 
-    setTimeout(function() {
+    setTimeout(() => {
         navigator.mediaDevices.getUserMedia(constraints)
             .then(gotStream)
-            .catch(function (error) {
+            .catch((error) => {
                 console.log('getUserMedia error!', error);
 
                 if (scanning) {
@@ -185,50 +200,54 @@ function gum(candidate, device) {
 
 
 function displayVideoDimensions() {
+    //This should only happen during setup
+    if (tests === undefined)
+        return;
+
+    //Wait for dimensions if they don't show right away
     if (!video.videoWidth) {
         setTimeout(displayVideoDimensions, 500);  //was 500
     }
 
     if (video.videoWidth * video.videoHeight > 0) {
-        if(tests[r].width + "x" + tests[r].height != video.videoWidth + "x" + video.videoHeight){
+        if (tests[r].width + "x" + tests[r].height !== video.videoWidth + "x" + video.videoHeight) {
             captureResults("fail: mismatch");
         }
-        else{
+        else {
             captureResults("pass");
         }
     }
 }
 
 
-
 video.onloadedmetadata = displayVideoDimensions;
 
 
 //Save results to the candidate so
-function captureResults(status){
+function captureResults(status) {
     console.log("Stream dimensions for " + tests[r].label + ": " + video.videoWidth + "x" + video.videoHeight);
 
     if (!scanning)   //exit if scan is not active
         return;
 
     tests[r].status = status;
-    tests[r].streamWidth =  video.videoWidth;
-    tests[r].streamHeight =  video.videoHeight;
+    tests[r].streamWidth = video.videoWidth;
+    tests[r].streamHeight = video.videoHeight;
 
-    var row = $('table#results')[0].insertRow(-1);
-    var browserVer = row.insertCell(0);
-    var deviceName = row.insertCell(1);
-    var label = row.insertCell(2);
-    var ratio = row.insertCell(3);
-    var ask = row.insertCell(4);
-    var actual = row.insertCell(5);
-    var statusCell = row.insertCell(6);
-    var deviceIndex = row.insertCell(7);
-    var resIndex = row.insertCell(8);
+    let row = $('table#results')[0].insertRow(-1);
+    let browserVer = row.insertCell(0);
+    let deviceName = row.insertCell(1);
+    let label = row.insertCell(2);
+    let ratio = row.insertCell(3);
+    let ask = row.insertCell(4);
+    let actual = row.insertCell(5);
+    let statusCell = row.insertCell(6);
+    let deviceIndex = row.insertCell(7);
+    let resIndex = row.insertCell(8);
 
     //don't show these
-    deviceIndex.style.display="none";
-    resIndex.style.display="none";
+    deviceIndex.style.display = "none";
+    resIndex.style.display = "none";
 
     deviceIndex.class = "hidden";
     resIndex.class = "hidden";
@@ -238,7 +257,7 @@ function captureResults(status){
     label.innerHTML = tests[r].label;
     ratio.innerHTML = tests[r].ratio;
     ask.innerHTML = tests[r].width + "x" + tests[r].height;
-    actual.innerHTML = tests[r].streamWidth+ "x" + tests[r].streamHeight;
+    actual.innerHTML = tests[r].streamWidth + "x" + tests[r].streamHeight;
     statusCell.innerHTML = tests[r].status;
     deviceIndex.innerHTML = camNum;     //used for debugging
     resIndex.innerHTML = r;             //used for debugging
@@ -246,27 +265,27 @@ function captureResults(status){
     r++;
 
     //go to the next tests
-    if (r < tests.length){
+    if (r < tests.length) {
         gum(tests[r], selectedCamera[camNum]);
     }
-    else if (camNum < selectedCamera.length -1){     //move on to the next camera
+    else if (camNum < selectedCamera.length - 1) {     //move on to the next camera
         camNum++;
-        r=0;
+        r = 0;
         gum(tests[r], selectedCamera[camNum])
     }
-    else{ //finish up
-       video.removeEventListener("onloadedmetadata", displayVideoDimensions); //turn off the event handler
-       $('button').off("click"); //turn the generic button handler  off
+    else { //finish up
+        video.removeEventListener("onloadedmetadata", displayVideoDimensions); //turn off the event handler
+        $('button').off("click"); //turn the generic button handler  off
 
         scanning = false;
 
         $(".pfin").show();
-        $('#csvOut').click(function(){
+        $('#csvOut').click(() => {
             exportTableToCSV.apply(this, [$('#results'), 'gumResTestExport.csv']);
-            });
+        });
 
         //allow to click on a row to test (only works with device Enumeration
-        if (devices){
+        if (devices) {
             clickRows();
         }
     }
@@ -274,19 +293,19 @@ function captureResults(status){
 
 //allow clicking on a row to see the camera capture
 //To do: figure out why this doesn't work in Firefox
-function clickRows(){
-    $('tr').click(function(){
+function clickRows() {
+    $('tr').click(() => {
         r = $(this).find("td").eq(8).html();
 
         //lookup the device id based on the row label
-        for(var z=0; z<selectedCamera.length; z++) {
-            if(selectedCamera[z].label== $(this).find("td").eq(1).html()){
+        for (let z = 0; z < selectedCamera.length; z++) {
+            if (selectedCamera[z].label === $(this).find("td").eq(1).html()) {
                 var thisCam = selectedCamera[z]; //devices[z].value;
                 console.log(this)
             }
         }
 
-        console.log("table click! clicked on " + thisCam + ":" + tests[r].label );
+        console.log("table click! clicked on " + thisCam + ":" + tests[r].label);
         gum(tests[r], thisCam);
     })
 }
@@ -296,7 +315,7 @@ function clickRows(){
 const quickScan = [
     {
         "label": "4K(UHD)",
-        "width" : 3840,
+        "width": 3840,
         "height": 2160,
         "ratio": "16:9"
     },
@@ -364,14 +383,14 @@ const quickScan = [
 ];
 
 //creates an object with all HD & SD video ratios between two heights
-function createAllResolutions(minHeight, maxHeight){
-    const ratioHD = 16/9;
-    const ratioSD = 4/3;
+function createAllResolutions(minHeight, maxHeight) {
+    const ratioHD = 16 / 9;
+    const ratioSD = 4 / 3;
 
-    var resolutions = [],
+    let resolutions = [],
         res;
 
-    for (var y=maxHeight; y>=minHeight; y--){
+    for (let y = maxHeight; y >= minHeight; y--) {
         //HD
         res = {
             "label": (y * ratioHD).toFixed() + "x" + y,
@@ -384,7 +403,7 @@ function createAllResolutions(minHeight, maxHeight){
         //SD
         res = {
             "label": (y * ratioSD).toFixed() + "x" + y,
-            "width" : parseInt((y * ratioSD).toFixed()),
+            "width": parseInt((y * ratioSD).toFixed()),
             "height": y,
             "ratio": "4:3"
         };
@@ -394,7 +413,7 @@ function createAllResolutions(minHeight, maxHeight){
         //noinspection JSSuspiciousNameCombination
         res = {
             "label": y + "x" + y,
-            "width" : y,
+            "width": y,
             "height": y,
             "ratio": "1:1"
         };
@@ -412,35 +431,35 @@ function createAllResolutions(minHeight, maxHeight){
  */
 function exportTableToCSV($table, filename) {
 
-    var $rows = $table.find('tr:has(th), tr:has(td)'),
+    let $rows = $table.find('tr:has(th), tr:has(td)'),
 
-    // Temporary delimiter characters unlikely to be typed by keyboard
-    // This is to avoid accidentally splitting the actual contents
+        // Temporary delimiter characters unlikely to be typed by keyboard
+        // This is to avoid accidentally splitting the actual contents
         tmpColDelim = String.fromCharCode(11), // vertical tab character
         tmpRowDelim = String.fromCharCode(0), // null character
 
-    // actual delimiter characters for CSV format
+        // actual delimiter characters for CSV format
         colDelim = '","',
         rowDelim = '"\r\n"',
 
-    // Grab text from table into CSV formatted string
-        csv = '"' + $rows.map(function(i, row) {
-                var $row = $(row),
-                    $cols = $row.find('th, td');
+        // Grab text from table into CSV formatted string
+        csv = '"' + $rows.map((i, row) => {
+            let $row = $(row),
+                $cols = $row.find('th, td');
 
-                return $cols.map(function(j, col) {
-                    var $col = $(col),
-                        text = $col.text();
+            return $cols.map((j, col) => {
+                let $col = $(col),
+                    text = $col.text();
 
-                    return text.replace(/"/g, '""'); // escape double quotes
+                return text.replace(/"/g, '""'); // escape double quotes
 
-                }).get().join(tmpColDelim);
+            }).get().join(tmpColDelim);
 
-            }).get().join(tmpRowDelim)
-                .split(tmpRowDelim).join(rowDelim)
-                .split(tmpColDelim).join(colDelim) + '"',
+        }).get().join(tmpRowDelim)
+            .split(tmpRowDelim).join(rowDelim)
+            .split(tmpColDelim).join(colDelim) + '"',
 
-    // Data URI
+        // Data URI
         csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
 
     $(this)
