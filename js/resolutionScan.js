@@ -85,7 +85,7 @@ $(document).ready(() => {
 });
 
 //Start scan by controlling the quick and full scan buttons
-$('button').click(() => {
+$('button').click(function(){
 
     //setup for a quick scan using the hand-built quickScan object
     if (this.innerHTML === "Quick Scan") {
@@ -280,7 +280,7 @@ function captureResults(status) {
         scanning = false;
 
         $(".pfin").show();
-        $('#csvOut').click(() => {
+        $('#csvOut').click(function() {
             exportTableToCSV.apply(this, [$('#results'), 'gumResTestExport.csv']);
         });
 
@@ -294,7 +294,7 @@ function captureResults(status) {
 //allow clicking on a row to see the camera capture
 //To do: figure out why this doesn't work in Firefox
 function clickRows() {
-    $('tr').click(() => {
+    $('tr').click(function() {
         r = $(this).find("td").eq(8).html();
 
         //lookup the device id based on the row label
