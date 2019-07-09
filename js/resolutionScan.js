@@ -10,7 +10,6 @@
 let video = $('#video')[0],     //where we will put & test our video output
     deviceList = $('#devices')[0],          //device list dropdown
     devices = [],                        //getSources object to hold various camera options
-    stream,
     selectedCamera = [],            //used to hold a camera's ID and other parameters
     tests,                          //holder for our test results
     r = 0,                          //used for iterating through the array
