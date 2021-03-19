@@ -10,7 +10,6 @@
 let video = $('#video')[0],     //where we will put & test our video output
     deviceList = $('#devices')[0],          //device list dropdown
     devices = [],                        //getSources object to hold various camera options
-    stream,
     selectedCamera = [],            //used to hold a camera's ID and other parameters
     tests,                          //holder for our test results
     r = 0,                          //used for iterating through the array
@@ -156,7 +155,7 @@ function gum(candidate, device) {
     console.log("trying " + candidate.label + " on " + device.label);
 
     //Kill any running streams;
-    if (stream) {
+    if (window.stream) {
         stream.getTracks().forEach((track) => {
             track.stop();
         });
@@ -182,7 +181,7 @@ function gum(candidate, device) {
                     captureResults("fail: " + error.name);
                 }
             });
-    }, (stream ? 200 : 0));  //official examples had this at 200
+    }, (window.stream ? 200 : 0));  //official examples had this at 200
 
 
     function gotStream(mediaStream) {
