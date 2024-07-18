@@ -42,7 +42,7 @@ $(document).ready(() => {
 
     console.log("adapter.js says this is " + adapter.browserDetails.browser + " " + adapter.browserDetails.version);
 
-    if (!navigator.getUserMedia) {
+    if (!navigator.mediaDevices.getUserMedia) {
         alert('You need a browser that supports WebRTC');
         $("div").hide();
         return;
